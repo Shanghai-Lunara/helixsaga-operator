@@ -1,0 +1,11 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: hexlisagaoperators.hexlisagaoperator.nevercase.io
+spec:
+  group: hexlisagaoperator.nevercase.io
+  version: v1
+  names:
+    kind: HexliSagaOperator
+    plural: helixsagaoperators
+  scope: Namespaced
