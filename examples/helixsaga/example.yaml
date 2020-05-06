@@ -1,0 +1,5 @@
+apiVersion: helixsagaoperator.nevercase.io/v1
+kind: HelixSagaOperator
+metadata:
+  name: example-helixsaga
+spec:
