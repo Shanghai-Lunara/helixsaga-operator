@@ -1,6 +1,6 @@
 package helixsaga
 
 const (
-	GroupName = "helixsagaoperator.nevercase.io"
+	GroupName = "helixsaga.nevercase.io"
 	Version   = "v1"
 )
