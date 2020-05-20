@@ -48,7 +48,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.NginxPhpFpmSpec)
 	t := coreV1.HostPathDirectoryOrCreate
 	hostPath := &coreV1.HostPathVolumeSource{
 		Type: &t,
-		Path: fmt.Sprintf("/mnt/ssd1/mysql/%s", spec.Name),
+		Path: fmt.Sprintf("/mnt/ssd1/helixsaga/%s", spec.Name),
 	}
 	objectName := fmt.Sprintf(k8sCoreV1.StatefulSetNameTemplate, spec.Name)
 	containerName := fmt.Sprintf(k8sCoreV1.ContainerNameTemplate, spec.Name)
@@ -78,31 +78,34 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.NginxPhpFpmSpec)
 								HostPath: hostPath,
 							},
 						},
-						//{
-						//	Name: "test-configmap",
-						//	VolumeSource: coreV1.VolumeSource{
-						//		ConfigMap: &coreV1.ConfigMapVolumeSource{
-						//			Items: []coreV1.KeyToPath{
-						//				{
-						//					Key:  "mysql.php",
-						//					Path: "mysql.php",
-						//				},
-						//				{
-						//					Key:  "redis.php",
-						//					Path: "redis.php",
-						//				},
-						//				{
-						//					Key:  "version.php",
-						//					Path: "version.php",
-						//				},
-						//				{
-						//					Key:  "gs.php",
-						//					Path: "gs.php",
-						//				},
-						//			},
-						//		},
-						//	},
-						//},
+						{
+							Name: "test-conf-volume",
+							VolumeSource: coreV1.VolumeSource{
+								ConfigMap: &coreV1.ConfigMapVolumeSource{
+									LocalObjectReference: coreV1.LocalObjectReference{
+										Name: "test-conf",
+									},
+									Items: []coreV1.KeyToPath{
+										{
+											Key:  "mysql.php",
+											Path: "mysql.php",
+										},
+										{
+											Key:  "redis.php",
+											Path: "redis.php",
+										},
+										{
+											Key:  "version.php",
+											Path: "version.php",
+										},
+										{
+											Key:  "gs.php",
+											Path: "gs.php",
+										},
+									},
+								},
+							},
+						},
 					},
 					Containers: []coreV1.Container{
 						{
@@ -119,10 +122,10 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.NginxPhpFpmSpec)
 									MountPath: "/data",
 									Name:      "task-pv-storage",
 								},
-								//{
-								//	MountPath: "/var/www/app/conf",
-								//	Name:      "test-configmap",
-								//},
+								{
+									MountPath: "/var/www/app/conf",
+									Name:      "test-conf-volume",
+								},
 							},
 						},
 					},
