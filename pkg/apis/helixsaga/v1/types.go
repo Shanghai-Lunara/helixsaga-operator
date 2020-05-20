@@ -25,20 +25,20 @@ type HelixSaga struct {
 	// Spec is the custom resource spec
 	Spec HelixSagaSpec `json:"spec"`
 
-	Status HelixSagaSpecStatus `json:"status"`
+	Status HelixSagaStatus `json:"status"`
 }
 
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
 	ConfigMapName       string              `json:"config_map_name"`
-	VersionSpec         NginxPhpFpmSpec     `json:"version_spec"`
-	ApiSpec             NginxPhpFpmSpec     `json:"api_spec"`
-	GameSpec            NginxPhpFpmSpec     `json:"game_spec"`
-	PayNotifySpec       NginxPhpFpmSpec     `json:"pay_notify_spec"`
-	GmtSpec             NginxPhpFpmSpec     `json:"gmt_spec"`
-	FriendSpec          PhpSwooleSpec       `json:"friend_spec"`
-	QueueSpec           PhpSwooleSpec       `json:"queue_spec"`
-	RankSpec            PhpSwooleSpec       `json:"rank_spec"`
+	VersionSpec         HelixSagaCoreSpec   `json:"version_spec"`
+	ApiSpec             HelixSagaCoreSpec   `json:"api_spec"`
+	GameSpec            HelixSagaCoreSpec   `json:"game_spec"`
+	PayNotifySpec       HelixSagaCoreSpec   `json:"pay_notify_spec"`
+	GmtSpec             HelixSagaCoreSpec   `json:"gmt_spec"`
+	FriendSpec          HelixSagaCoreSpec   `json:"friend_spec"`
+	QueueSpec           HelixSagaCoreSpec   `json:"queue_spec"`
+	RankSpec            HelixSagaCoreSpec   `json:"rank_spec"`
 	ChatSpec            PhpWorkermanSpec    `json:"chat_spec"`
 	HeartSpec           PhpWorkermanSpec    `json:"heart_spec"`
 	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
@@ -46,8 +46,8 @@ type HelixSagaSpec struct {
 	AppNotificationSpec AppNotificationSpec `json:"app_notification_spec"`
 }
 
-//NginxPhpFpmSpec is the sub spec for a HelixSaga resource
-type NginxPhpFpmSpec struct {
+//HelixSagaCoreSpec is the sub spec for a HelixSaga resource
+type HelixSagaCoreSpec struct {
 	// Name of the container specified as a DNS_LABEL.
 	// Each container in a pod must have a unique name (DNS_LABEL).
 	// Cannot be updated.
@@ -86,70 +86,49 @@ type NginxPhpFpmSpec struct {
 	VolumeMounts []coreV1.VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,6,rep,name=volumeMounts"`
 }
 
-//PhpSwooleSpec is the sub spec for a HelixSaga resource
-type PhpSwooleSpec struct {
-	Name             string `json:"name"`
-	Replicas         *int32 `json:"replicas"`
-	Image            string `json:"image"`
-	ImagePullSecrets string `json:"imagePullSecrets"`
-}
-
 //PhpWorkermanSpec is the sub spec for a HelixSaga resource
 type PhpWorkermanSpec struct {
-	Name                   string `json:"name"`
-	RegisterReplicas       *int32 `json:"register_replicas"`
-	GatewayReplicas        *int32 `json:"gateway_replicas"`
-	BusinessWorkerReplicas *int32 `json:"business_worker_replicas"`
-	Replicas               *int32 `json:"replicas"`
-	Image                  string `json:"image"`
-	ImagePullSecrets       string `json:"imagePullSecrets"`
+	RegisterSpec       HelixSagaCoreSpec `json:"register_spec"`
+	GatewaySpec        HelixSagaCoreSpec `json:"gateway_spec"`
+	BusinessWorkerSpec HelixSagaCoreSpec `json:"business_worker_spec"`
 }
 
 //Campaign is the sub spec for a HelixSaga resource
 type CampaignSpec struct {
-	Name             string `json:"name"`
-	Replicas         *int32 `json:"replicas"`
-	Image            string `json:"image"`
-	ImagePullSecrets string `json:"imagePullSecrets"`
+	GatewaySpec HelixSagaCoreSpec `json:"gateway_spec"`
 }
 
 //GuildWarSpec is the sub spec for a HelixSaga resource
 type GuildWarSpec struct {
-	Name             string `json:"name"`
-	RegisterReplicas *int32 `json:"register_replicas"`
-	GatewayReplicas  *int32 `json:"gateway_replicas"`
-	Image            string `json:"image"`
-	ImagePullSecrets string `json:"imagePullSecrets"`
+	RegisterSpec HelixSagaCoreSpec `json:"register_spec"`
+	GatewaySpec  HelixSagaCoreSpec `json:"gateway_spec"`
 }
 
 //AppNotificationSpec is the sub spec for a HelixSaga resource
 type AppNotificationSpec struct {
-	Name             string `json:"name"`
-	DispatchReplicas *int32 `json:"dispatch_replicas"`
-	LogicReplicas    *int32 `json:"logic_replicas"`
-	Image            string `json:"image"`
-	ImagePullSecrets string `json:"imagePullSecrets"`
+	DispatchSpec HelixSagaCoreSpec `json:"dispatch_spec"`
+	LogicSpec    HelixSagaCoreSpec `json:"logic_spec"`
 }
 
 // HelixSagaStatus is the status for a HelixSaga resource
-type HelixSagaSpecStatus struct {
-	VersionStatus         CommonStatus `json:"version_status"`
-	ApiStatus             CommonStatus `json:"api_status"`
-	GameStatus            CommonStatus `json:"game_status"`
-	PayNotifyStatus       CommonStatus `json:"pay_notify_status"`
-	GmtStatus             CommonStatus `json:"gmt_status"`
-	FriendStatus          CommonStatus `json:"friend_status"`
-	QueueStatus           CommonStatus `json:"queue_status"`
-	RankStatus            CommonStatus `json:"rank_status"`
-	ChatStatus            CommonStatus `json:"chat_status"`
-	HeartStatus           CommonStatus `json:"heart_status"`
-	CampaignStatus        CommonStatus `json:"campaign_status"`
-	GuildWarStatus        CommonStatus `json:"guild_war_status"`
-	AppNotificationStatus CommonStatus `json:"app_notification_status"`
+type HelixSagaStatus struct {
+	VersionStatus         HelixSagaCoreStatus   `json:"version_status"`
+	ApiStatus             HelixSagaCoreStatus   `json:"api_status"`
+	GameStatus            HelixSagaCoreStatus   `json:"game_status"`
+	PayNotifyStatus       HelixSagaCoreStatus   `json:"pay_notify_status"`
+	GmtStatus             HelixSagaCoreStatus   `json:"gmt_status"`
+	FriendStatus          HelixSagaCoreStatus   `json:"friend_status"`
+	QueueStatus           HelixSagaCoreStatus   `json:"queue_status"`
+	RankStatus            HelixSagaCoreStatus   `json:"rank_status"`
+	ChatStatus            PhpWorkermanStatus    `json:"chat_status"`
+	HeartStatus           PhpWorkermanStatus    `json:"heart_status"`
+	CampaignStatus        CampaignStatus        `json:"campaign_status"`
+	GuildWarStatus        GuildWarStatus        `json:"guild_war_status"`
+	AppNotificationStatus AppNotificationStatus `json:"app_notification_status"`
 }
 
-//CommonStatus is the sub status for a HelixSaga resource
-type CommonStatus struct {
+//HelixSagaCoreStatus is the sub status for a HelixSaga resource
+type HelixSagaCoreStatus struct {
 	// The generation observed by the deployment controller.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,1,opt,name=observedGeneration"`
@@ -175,6 +154,30 @@ type CommonStatus struct {
 	// either be pods that are running but not yet available or pods that still have not been created.
 	// +optional
 	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty" protobuf:"varint,5,opt,name=unavailableReplicas"`
+}
+
+//PhpWorkermanStatus is the sub Status for a HelixSaga resource
+type PhpWorkermanStatus struct {
+	RegisterStatus       HelixSagaCoreStatus `json:"register_status"`
+	GatewayStatus        HelixSagaCoreStatus `json:"gateway_status"`
+	BusinessWorkerStatus HelixSagaCoreStatus `json:"business_worker_status"`
+}
+
+//Campaign is the sub Status for a HelixSaga resource
+type CampaignStatus struct {
+	GatewayStatus HelixSagaCoreStatus `json:"gateway_status"`
+}
+
+//GuildWarStatus is the sub Status for a HelixSaga resource
+type GuildWarStatus struct {
+	RegisterStatus HelixSagaCoreStatus `json:"register_status"`
+	GatewayStatus  HelixSagaCoreStatus `json:"gateway_status"`
+}
+
+//AppNotificationStatus is the sub Status for a HelixSaga resource
+type AppNotificationStatus struct {
+	DispatchStatus HelixSagaCoreStatus `json:"dispatch_status"`
+	LogicStatus    HelixSagaCoreStatus `json:"logic_status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
