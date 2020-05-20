@@ -17,3 +17,7 @@ const (
 	// is synced successfully
 	MessageResourceSynced = "Foo synced successfully"
 )
+
+const (
+	NginxPhpFpmDefaultPort = 80
+)

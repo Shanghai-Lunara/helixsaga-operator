@@ -3,3 +3,14 @@ kind: HelixSaga
 metadata:
   name: example-helixsaga
 spec:
+  version_spec:
+    name: "test-version"
+    replicas: 1
+    image: 39.99.229.222:37229/helix-saga/helix-saga-version:1.0
+    imagePullSecrets:
+    - name: private-harbor
+    env:
+      - name: GET_HOSTS_FROM
+        value: dns
+      - name: ENV_ROOT_PATH
+        value: "/var/www/app/version"

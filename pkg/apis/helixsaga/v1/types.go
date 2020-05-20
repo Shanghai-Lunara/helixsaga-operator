@@ -1,6 +1,7 @@
 package v1
 
 import (
+	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -47,11 +48,42 @@ type HelixSagaSpec struct {
 
 //NginxPhpFpmSpec is the sub spec for a HelixSaga resource
 type NginxPhpFpmSpec struct {
-	Name             string `json:"name"`
-	Replicas         *int32 `json:"replicas"`
-	Image            string `json:"image"`
-	ImagePullSecrets string `json:"imagePullSecrets"`
-	NginxServerRoot  string `json:"nginx_server_root"`
+	// Name of the container specified as a DNS_LABEL.
+	// Each container in a pod must have a unique name (DNS_LABEL).
+	// Cannot be updated.
+	Name string `json:"name" protobuf:"bytes,1,rep,name=name"`
+	// Replicas is the number of desired replicas.
+	// This is a pointer to distinguish between explicit zero and unspecified.
+	// Defaults to 1.
+	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty" protobuf:"bytes,2,rep,name=replicas"`
+	// Docker image name.
+	// More info: https://kubernetes.io/docs/concepts/containers/images
+	// This field is optional to allow higher level config management to default or override
+	// container images in workload controllers like Deployments and StatefulSets.
+	// +optional
+	Image string `json:"image,omitempty" protobuf:"bytes,3,opt,name=image"`
+	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+	// If specified, these secrets will be passed to individual puller implementations for them to use. For example,
+	// in the case of docker, only DockerConfig type secrets are honored.
+	// More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	ImagePullSecrets []coreV1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,4,rep,name=imagePullSecrets"`
+	// List of environment variables to set in the container.
+	// Cannot be updated.
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	Env []coreV1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,5,rep,name=env"`
+	// Pod volumes to mount into the container's filesystem.
+	// Cannot be updated.
+	// +optional
+	// +patchMergeKey=mountPath
+	// +patchStrategy=merge
+	VolumeMounts []coreV1.VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,6,rep,name=volumeMounts"`
 }
 
 //PhpSwooleSpec is the sub spec for a HelixSaga resource
