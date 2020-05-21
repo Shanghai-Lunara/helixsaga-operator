@@ -24,21 +24,16 @@ type HelixSaga struct {
 
 	// Spec is the custom resource spec
 	Spec HelixSagaSpec `json:"spec"`
-
-	Status HelixSagaStatus `json:"status"`
 }
 
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
 	ConfigMap           HelixSagaConfigMap  `json:"config_map"`
-	VersionSpec         HelixSagaCoreSpec   `json:"version_spec"`
-	ApiSpec             HelixSagaCoreSpec   `json:"api_spec"`
-	GameSpec            HelixSagaCoreSpec   `json:"game_spec"`
-	PayNotifySpec       HelixSagaCoreSpec   `json:"pay_notify_spec"`
-	GmtSpec             HelixSagaCoreSpec   `json:"gmt_spec"`
+	NginxPhpFpm         []HelixSagaCore     `json:"nginx_php_fpm"`
 	FriendSpec          HelixSagaCoreSpec   `json:"friend_spec"`
 	QueueSpec           HelixSagaCoreSpec   `json:"queue_spec"`
 	RankSpec            HelixSagaCoreSpec   `json:"rank_spec"`
+	PhpWorkerman        []PhpWorkermanSpec  `json:"php_workerman"`
 	ChatSpec            PhpWorkermanSpec    `json:"chat_spec"`
 	HeartSpec           PhpWorkermanSpec    `json:"heart_spec"`
 	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
@@ -49,6 +44,11 @@ type HelixSagaSpec struct {
 type HelixSagaConfigMap struct {
 	Volume      coreV1.Volume      `json:"volume"`
 	VolumeMount coreV1.VolumeMount `json:"volumeMount"`
+}
+
+type HelixSagaCore struct {
+	Spec   HelixSagaCoreSpec   `json:"spec"`
+	Status HelixSagaCoreStatus `json:"status"`
 }
 
 //HelixSagaCoreSpec is the sub spec for a HelixSaga resource

@@ -3,11 +3,12 @@ package helixsaga
 import (
 	"fmt"
 
-	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
-	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 	appsV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
+	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
 func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) *appsV1.StatefulSet {
@@ -20,11 +21,9 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 		Type: &t,
 		Path: fmt.Sprintf("/mnt/ssd1/helixsaga/%s", spec.Name),
 	}
-	objectName := fmt.Sprintf(k8sCoreV1.StatefulSetNameTemplate, spec.Name)
-	containerName := fmt.Sprintf(k8sCoreV1.ContainerNameTemplate, spec.Name)
-	standard := &appsV1.StatefulSet{
+	return &appsV1.StatefulSet{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name:      objectName,
+			Name:      fmt.Sprintf(k8sCoreV1.StatefulSetNameTemplate, spec.Name),
 			Namespace: hs.Namespace,
 			OwnerReferences: []metaV1.OwnerReference{
 				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(operatorKindName)),
@@ -52,7 +51,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 					},
 					Containers: []coreV1.Container{
 						{
-							Name:  containerName,
+							Name:  fmt.Sprintf(k8sCoreV1.ContainerNameTemplate, spec.Name),
 							Image: spec.Image,
 							Ports: []coreV1.ContainerPort{
 								{
@@ -74,5 +73,4 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 			},
 		},
 	}
-	return standard
 }

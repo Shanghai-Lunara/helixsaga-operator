@@ -8,26 +8,58 @@ spec:
       name: test-conf-volume
       configMap:
         items:
+          - key: campaign.yml
+            path: campaign.yml
+          - key: chat.php
+            path: chat.php
+          - key: friend.php
+            path: friend.php
+          - key: game.php
+            path: game.php
+          - key: gs.php
+            path: gs.php
+          - key: guildwar.yml
+            path: guildwar.yml
+          - key: heart.php
+            path: heart.php
+          - key: inc.php
+            path: inc.php
           - key: mysql.php
             path: mysql.php
+          - key: push.yml
+            path: push.yml
+          - key: queue.php
+            path: queue.php
+          - key: rank.php
+            path: rank.php
           - key: redis.php
             path: redis.php
           - key: version.php
             path: version.php
-          - key: gs.php
-            path: gs.php
         name: test-conf
     volumeMount:
       mountPath: /var/www/app/conf
       name: test-conf-volume
-  version_spec:
-    name: "test-version"
-    replicas: 1
-    image: 39.99.229.222:37229/helix-saga/helix-saga-version:1.0
-    imagePullSecrets:
-    - name: private-harbor
-    env:
-      - name: GET_HOSTS_FROM
-        value: dns
-      - name: ENV_ROOT_PATH
-        value: "/var/www/app/version"
+  nginx_php_fpm:
+  - spec:
+      name: "hs-cn1-version"
+      replicas: 1
+      image: harbor-domain/helix-saga-version:1.0
+      imagePullSecrets:
+      - name: private-harbor
+      env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: ENV_ROOT_PATH
+          value: "/var/www/app/version"
+  - spec:
+      name: "hs-cn1-game"
+      replicas: 1
+      image: harbor-domain/helix-saga-version:1.0
+      imagePullSecrets:
+        - name: private-harbor
+      env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: ENV_ROOT_PATH
+          value: "/var/www/app/game/index"

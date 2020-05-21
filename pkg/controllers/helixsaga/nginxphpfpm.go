@@ -20,6 +20,9 @@ func NewNginxPhpFpm(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.I
 		if ss, err = ks.StatefulSet().Create(hs.Namespace, spec.Name, NewStatefulSet(hs, spec)); err != nil {
 			return err
 		}
+		if _, err = ks.Service().Create(hs.Namespace, spec.Name, NewService(hs, spec)); err != nil {
+			return err
+		}
 	}
 	klog.Info("rds:", *spec.Replicas)
 	klog.Info("statefulSet:", *ss.Spec.Replicas)
@@ -28,8 +31,11 @@ func NewNginxPhpFpm(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.I
 			klog.Info(err)
 			return err
 		}
+		if _, err = ks.Service().Update(hs.Namespace, NewService(hs, spec)); err != nil {
+			return err
+		}
 	}
-	if err = updateFooStatus(hs, client, ss); err != nil {
+	if err = updateStatus(hs, client, ss, spec.Name); err != nil {
 		return err
 	}
 	return nil
