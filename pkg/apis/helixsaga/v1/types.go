@@ -30,7 +30,7 @@ type HelixSaga struct {
 
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
-	ConfigMapName       string              `json:"config_map_name"`
+	ConfigMap           HelixSagaConfigMap  `json:"config_map"`
 	VersionSpec         HelixSagaCoreSpec   `json:"version_spec"`
 	ApiSpec             HelixSagaCoreSpec   `json:"api_spec"`
 	GameSpec            HelixSagaCoreSpec   `json:"game_spec"`
@@ -44,6 +44,11 @@ type HelixSagaSpec struct {
 	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
 	GuildWarSpec        GuildWarSpec        `json:"guild_war_spec"`
 	AppNotificationSpec AppNotificationSpec `json:"app_notification_spec"`
+}
+
+type HelixSagaConfigMap struct {
+	Volume      coreV1.Volume      `json:"volume"`
+	VolumeMount coreV1.VolumeMount `json:"volumeMount"`
 }
 
 //HelixSagaCoreSpec is the sub spec for a HelixSaga resource
@@ -143,17 +148,17 @@ type HelixSagaCoreStatus struct {
 
 	// Total number of ready pods targeted by this deployment.
 	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty" protobuf:"varint,7,opt,name=readyReplicas"`
+	ReadyReplicas int32 `json:"readyReplicas,omitempty" protobuf:"varint,4,opt,name=readyReplicas"`
 
 	// Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
 	// +optional
-	AvailableReplicas int32 `json:"availableReplicas,omitempty" protobuf:"varint,4,opt,name=availableReplicas"`
+	AvailableReplicas int32 `json:"availableReplicas,omitempty" protobuf:"varint,5,opt,name=availableReplicas"`
 
 	// Total number of unavailable pods targeted by this deployment. This is the total number of
 	// pods that are still required for the deployment to have 100% available capacity. They may
 	// either be pods that are running but not yet available or pods that still have not been created.
 	// +optional
-	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty" protobuf:"varint,5,opt,name=unavailableReplicas"`
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty" protobuf:"varint,6,opt,name=unavailableReplicas"`
 }
 
 //PhpWorkermanStatus is the sub Status for a HelixSaga resource

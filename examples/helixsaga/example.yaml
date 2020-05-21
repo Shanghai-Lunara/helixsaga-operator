@@ -3,6 +3,23 @@ kind: HelixSaga
 metadata:
   name: example-helixsaga
 spec:
+  config_map:
+    volume:
+      name: test-conf-volume
+      configMap:
+        items:
+          - key: mysql.php
+            path: mysql.php
+          - key: redis.php
+            path: redis.php
+          - key: version.php
+            path: version.php
+          - key: gs.php
+            path: gs.php
+        name: test-conf
+    volumeMount:
+      mountPath: /var/www/app/conf
+      name: test-conf-volume
   version_spec:
     name: "test-version"
     replicas: 1
