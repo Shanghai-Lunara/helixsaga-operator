@@ -74,26 +74,14 @@ func Get(foo interface{}, nameSpace, ownerRefName string) (obj interface{}, err 
 func Sync(obj interface{}, clientObj interface{}, ks k8sCoreV1.KubernetesResource, recorder record.EventRecorder) error {
 	hs := obj.(*helixSagaV1.HelixSaga)
 	clientSet := clientObj.(helixSagaClientSet.Interface)
-	for _, v := range hs.Spec.NginxPhpFpm {
+	for _, v := range hs.Spec.Services {
 		klog.Info("v:", v)
-		if err := NewNginxPhpFpm(ks, clientSet, hs, v.Spec); err != nil {
-			klog.V(2).Info(err)
-			return err
-		}
-	}
-	for _, v := range hs.Spec.PhpSwoole {
-		klog.Info("v:", v)
-		if err := NewNginxPhpFpm(ks, clientSet, hs, v.Spec); err != nil {
+		if err := NewStatefulSetAndService(ks, clientSet, hs, v.Spec); err != nil {
 			klog.V(2).Info(err)
 			return err
 		}
 	}
 	recorder.Event(hs, coreV1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
-	return nil
-}
-
-func createAndUpdate() error {
-
 	return nil
 }
 
@@ -103,13 +91,14 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	// Or create a copy manually for better performance
 	fooCopy := foo.DeepCopy()
 	t := make([]helixSagaV1.HelixSagaCore , 0)
-	for _, v := range fooCopy.Spec.NginxPhpFpm {
+	for _, v := range fooCopy.Spec.Services {
 		if v.Spec.Name == name {
 			v.Status.Replicas = ss.Status.Replicas
 			v.Status.AvailableReplicas = ss.Status.Replicas
 		}
 		t = append(t, v)
 	}
+	fooCopy.Spec.Services = t
 
 	// If the CustomResourceSubResources feature gate is not enabled,
 	// we must use Update instead of UpdateStatus to update the Status block of the RedisOperator resource.
@@ -133,3 +122,4 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 //	_, err := clientSet.HelixsagaV1().HelixSagas(foo.Namespace).Update(fooCopy)
 //	return err
 //}
+

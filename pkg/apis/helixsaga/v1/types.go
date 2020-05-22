@@ -29,13 +29,11 @@ type HelixSaga struct {
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
 	ConfigMap           HelixSagaConfigMap  `json:"config_map"`
-	NginxPhpFpm         []HelixSagaCore     `json:"nginx_php_fpm"`
-	PhpSwoole           []HelixSagaCore     `json:"php_swoole"`
+	Services            []HelixSagaCore     `json:"services"`
 	PhpWorkerman        []PhpWorkermanSpec  `json:"php_workerman"`
 	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
 	GuildWarSpec        GuildWarSpec        `json:"guild_war_spec"`
 	AppNotificationSpec AppNotificationSpec `json:"app_notification_spec"`
-
 }
 
 type HelixSagaConfigMap struct {
@@ -95,7 +93,7 @@ type HelixSagaCoreSpec struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
-	Command []string `json:"command,omitempty" protobuf:"bytes,3,rep,name=command"`
+	Command []string `json:"command,omitempty" protobuf:"bytes,7,rep,name=command"`
 	// Arguments to the entrypoint.
 	// The docker image's CMD is used if this is not provided.
 	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
@@ -105,31 +103,31 @@ type HelixSagaCoreSpec struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
-	Args []string `json:"args,omitempty" protobuf:"bytes,4,rep,name=args"`
+	Args []string `json:"args,omitempty" protobuf:"bytes,8,rep,name=args"`
 }
 
 //PhpWorkermanSpec is the sub spec for a HelixSaga resource
 type PhpWorkermanSpec struct {
-	RegisterSpec       HelixSagaCoreSpec `json:"register_spec"`
-	GatewaySpec        HelixSagaCoreSpec `json:"gateway_spec"`
-	BusinessWorkerSpec HelixSagaCoreSpec `json:"business_worker_spec"`
+	Register       HelixSagaCore `json:"register"`
+	Gateway        HelixSagaCore `json:"gateway"`
+	BusinessWorker HelixSagaCore `json:"business_worker"`
 }
 
 //Campaign is the sub spec for a HelixSaga resource
 type CampaignSpec struct {
-	GatewaySpec HelixSagaCoreSpec `json:"gateway_spec"`
+	Gateway HelixSagaCoreSpec `json:"gateway"`
 }
 
 //GuildWarSpec is the sub spec for a HelixSaga resource
 type GuildWarSpec struct {
-	RegisterSpec HelixSagaCoreSpec `json:"register_spec"`
-	GatewaySpec  HelixSagaCoreSpec `json:"gateway_spec"`
+	Register HelixSagaCoreSpec `json:"register"`
+	Gateway  HelixSagaCoreSpec `json:"gateway"`
 }
 
 //AppNotificationSpec is the sub spec for a HelixSaga resource
 type AppNotificationSpec struct {
-	DispatchSpec HelixSagaCoreSpec `json:"dispatch_spec"`
-	LogicSpec    HelixSagaCoreSpec `json:"logic_spec"`
+	Dispatch HelixSagaCoreSpec `json:"dispatch"`
+	Logic    HelixSagaCoreSpec `json:"logic"`
 }
 
 // HelixSagaStatus is the status for a HelixSaga resource

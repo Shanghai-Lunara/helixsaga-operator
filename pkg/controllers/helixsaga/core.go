@@ -9,7 +9,7 @@ import (
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
-func NewNginxPhpFpm(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) error {
+func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) error {
 	ss, err := ks.StatefulSet().Get(hs.Namespace, spec.Name)
 	if err != nil {
 		klog.Info("statefulSet err:", err)
