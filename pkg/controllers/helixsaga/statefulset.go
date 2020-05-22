@@ -66,6 +66,8 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 									Name:      "task-pv-storage",
 								},
 							},
+							Command: spec.Command,
+							Args:    spec.Args,
 						},
 					},
 					ImagePullSecrets: spec.ImagePullSecrets,

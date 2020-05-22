@@ -221,6 +221,16 @@ func (in *HelixSagaCoreSpec) DeepCopyInto(out *HelixSagaCoreSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Command != nil {
+		in, out := &in.Command, &out.Command
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.Args != nil {
+		in, out := &in.Args, &out.Args
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -294,9 +304,13 @@ func (in *HelixSagaSpec) DeepCopyInto(out *HelixSagaSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.FriendSpec.DeepCopyInto(&out.FriendSpec)
-	in.QueueSpec.DeepCopyInto(&out.QueueSpec)
-	in.RankSpec.DeepCopyInto(&out.RankSpec)
+	if in.PhpSwoole != nil {
+		in, out := &in.PhpSwoole, &out.PhpSwoole
+		*out = make([]HelixSagaCore, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.PhpWorkerman != nil {
 		in, out := &in.PhpWorkerman, &out.PhpWorkerman
 		*out = make([]PhpWorkermanSpec, len(*in))
@@ -304,8 +318,6 @@ func (in *HelixSagaSpec) DeepCopyInto(out *HelixSagaSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.ChatSpec.DeepCopyInto(&out.ChatSpec)
-	in.HeartSpec.DeepCopyInto(&out.HeartSpec)
 	in.CampaignSpec.DeepCopyInto(&out.CampaignSpec)
 	in.GuildWarSpec.DeepCopyInto(&out.GuildWarSpec)
 	in.AppNotificationSpec.DeepCopyInto(&out.AppNotificationSpec)

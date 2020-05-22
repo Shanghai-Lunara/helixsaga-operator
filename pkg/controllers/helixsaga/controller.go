@@ -81,6 +81,13 @@ func Sync(obj interface{}, clientObj interface{}, ks k8sCoreV1.KubernetesResourc
 			return err
 		}
 	}
+	for _, v := range hs.Spec.PhpSwoole {
+		klog.Info("v:", v)
+		if err := NewNginxPhpFpm(ks, clientSet, hs, v.Spec); err != nil {
+			klog.V(2).Info(err)
+			return err
+		}
+	}
 	recorder.Event(hs, coreV1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
 	return nil
 }
@@ -112,17 +119,17 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	return err
 }
 
-func updateFooStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Interface, statefulSet *appsV1.StatefulSet) error {
-	// NEVER modify objects from the store. It's a read-only, local cache.
-	// You can use DeepCopy() to make a deep copy of original object and modify this copy
-	// Or create a copy manually for better performance
-	fooCopy := foo.DeepCopy()
-	fooCopy.Status.VersionStatus.AvailableReplicas = statefulSet.Status.Replicas
-
-	// If the CustomResourceSubResources feature gate is not enabled,
-	// we must use Update instead of UpdateStatus to update the Status block of the RedisOperator resource.
-	// UpdateStatus will not allow changes to the Spec of the resource,
-	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := clientSet.HelixsagaV1().HelixSagas(foo.Namespace).Update(fooCopy)
-	return err
-}
+//func updateFooStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Interface, statefulSet *appsV1.StatefulSet) error {
+//	// NEVER modify objects from the store. It's a read-only, local cache.
+//	// You can use DeepCopy() to make a deep copy of original object and modify this copy
+//	// Or create a copy manually for better performance
+//	fooCopy := foo.DeepCopy()
+//	fooCopy.Status.VersionStatus.AvailableReplicas = statefulSet.Status.Replicas
+//
+//	// If the CustomResourceSubResources feature gate is not enabled,
+//	// we must use Update instead of UpdateStatus to update the Status block of the RedisOperator resource.
+//	// UpdateStatus will not allow changes to the Spec of the resource,
+//	// which is ideal for ensuring nothing other than resource status has been updated.
+//	_, err := clientSet.HelixsagaV1().HelixSagas(foo.Namespace).Update(fooCopy)
+//	return err
+//}

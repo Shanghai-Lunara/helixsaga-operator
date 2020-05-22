@@ -44,7 +44,7 @@ spec:
   - spec:
       name: "hs-cn1-version"
       replicas: 1
-      image: harbor-domain/helix-saga-version:1.0
+      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
       imagePullSecrets:
       - name: private-harbor
       env:
@@ -55,7 +55,7 @@ spec:
   - spec:
       name: "hs-cn1-game"
       replicas: 1
-      image: harbor-domain/helix-saga-version:1.0
+      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
       imagePullSecrets:
         - name: private-harbor
       env:
@@ -63,3 +63,28 @@ spec:
           value: dns
         - name: ENV_ROOT_PATH
           value: "/var/www/app/game/index"
+  - spec:
+      name: "hs-cn1-gmt"
+      replicas: 1
+      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+      imagePullSecrets:
+        - name: private-harbor
+      env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: ENV_ROOT_PATH
+          value: "/var/www/app/gmt"
+  php_swoole:
+  - spec:
+      name: "hs-cn1-friend"
+      replicas: 1
+      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+      imagePullSecrets:
+        - name: private-harbor
+      env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: ENV_ROOT_PATH
+          value: "/var/www/app/"
+      command: ["php"]
+      args: ["/var/www/app/extensions/friend_server.php", "debug"]

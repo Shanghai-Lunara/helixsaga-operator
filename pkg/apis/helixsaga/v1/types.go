@@ -30,15 +30,12 @@ type HelixSaga struct {
 type HelixSagaSpec struct {
 	ConfigMap           HelixSagaConfigMap  `json:"config_map"`
 	NginxPhpFpm         []HelixSagaCore     `json:"nginx_php_fpm"`
-	FriendSpec          HelixSagaCoreSpec   `json:"friend_spec"`
-	QueueSpec           HelixSagaCoreSpec   `json:"queue_spec"`
-	RankSpec            HelixSagaCoreSpec   `json:"rank_spec"`
+	PhpSwoole           []HelixSagaCore     `json:"php_swoole"`
 	PhpWorkerman        []PhpWorkermanSpec  `json:"php_workerman"`
-	ChatSpec            PhpWorkermanSpec    `json:"chat_spec"`
-	HeartSpec           PhpWorkermanSpec    `json:"heart_spec"`
 	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
 	GuildWarSpec        GuildWarSpec        `json:"guild_war_spec"`
 	AppNotificationSpec AppNotificationSpec `json:"app_notification_spec"`
+
 }
 
 type HelixSagaConfigMap struct {
@@ -89,6 +86,26 @@ type HelixSagaCoreSpec struct {
 	// +patchMergeKey=mountPath
 	// +patchStrategy=merge
 	VolumeMounts []coreV1.VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,6,rep,name=volumeMounts"`
+	// Entrypoint array. Not executed within a shell.
+	// The docker image's ENTRYPOINT is used if this is not provided.
+	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+	// cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax
+	// can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded,
+	// regardless of whether the variable exists or not.
+	// Cannot be updated.
+	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+	// +optional
+	Command []string `json:"command,omitempty" protobuf:"bytes,3,rep,name=command"`
+	// Arguments to the entrypoint.
+	// The docker image's CMD is used if this is not provided.
+	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+	// cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax
+	// can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded,
+	// regardless of whether the variable exists or not.
+	// Cannot be updated.
+	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+	// +optional
+	Args []string `json:"args,omitempty" protobuf:"bytes,4,rep,name=args"`
 }
 
 //PhpWorkermanSpec is the sub spec for a HelixSaga resource
