@@ -1,6 +1,6 @@
 module github.com/Shanghai-Lunara/helixsaga-operator
 
-go 1.12
+go 1.14
 
 require (
 	github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200511100936-cc89d45c50c7
