@@ -15,6 +15,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 	labels := map[string]string{
 		"app":        operatorKindName,
 		"controller": hs.Name,
+		"role":       spec.Name,
 	}
 	t := coreV1.HostPathDirectoryOrCreate
 	hostPath := &coreV1.HostPathVolumeSource{
@@ -53,12 +54,8 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 						{
 							Name:  fmt.Sprintf(k8sCoreV1.ContainerNameTemplate, spec.Name),
 							Image: spec.Image,
-							Ports: []coreV1.ContainerPort{
-								{
-									ContainerPort: NginxPhpFpmDefaultPort,
-								},
-							},
-							Env: spec.Env,
+							Ports: spec.ContainerPorts,
+							Env:   spec.Env,
 							VolumeMounts: []coreV1.VolumeMount{
 								hs.Spec.ConfigMap.VolumeMount,
 								{

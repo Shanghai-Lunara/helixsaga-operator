@@ -2,7 +2,7 @@ package v1
 
 import (
 	coreV1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +genclient
@@ -12,7 +12,7 @@ import (
 //HelixSaga describes a HelixSaga resource
 type HelixSaga struct {
 	// TypeMeta is the metadata for the resource, like kind and apiversion
-	metav1.TypeMeta `json:",inline"`
+	metaV1.TypeMeta `json:",inline"`
 	// ObjectMeta contains the metadata for the particular object, including
 	// things like...
 	//  - name
@@ -20,7 +20,7 @@ type HelixSaga struct {
 	//  - self link
 	//  - labels
 	//  - ... etc ...
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metaV1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec is the custom resource spec
 	Spec HelixSagaSpec `json:"spec"`
@@ -30,7 +30,6 @@ type HelixSaga struct {
 type HelixSagaSpec struct {
 	ConfigMap           HelixSagaConfigMap  `json:"config_map"`
 	Services            []HelixSagaCore     `json:"services"`
-	PhpWorkerman        []PhpWorkermanSpec  `json:"php_workerman"`
 	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
 	GuildWarSpec        GuildWarSpec        `json:"guild_war_spec"`
 	AppNotificationSpec AppNotificationSpec `json:"app_notification_spec"`
@@ -104,13 +103,28 @@ type HelixSagaCoreSpec struct {
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
 	Args []string `json:"args,omitempty" protobuf:"bytes,8,rep,name=args"`
-}
-
-//PhpWorkermanSpec is the sub spec for a HelixSaga resource
-type PhpWorkermanSpec struct {
-	Register       HelixSagaCore `json:"register"`
-	Gateway        HelixSagaCore `json:"gateway"`
-	BusinessWorker HelixSagaCore `json:"business_worker"`
+	// List of ports to expose from the container. Exposing a port here gives
+	// the system additional information about the network connections a
+	// container uses, but is primarily informational. Not specifying a port here
+	// DOES NOT prevent that port from being exposed. Any port which is
+	// listening on the default "0.0.0.0" address inside a container will be
+	// accessible from the network.
+	// Cannot be updated.
+	// +optional
+	// +patchMergeKey=containerPort
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=containerPort
+	// +listMapKey=protocol
+	ContainerPorts []coreV1.ContainerPort `json:"containerPorts,omitempty" patchStrategy:"merge" patchMergeKey:"containerPort" protobuf:"bytes,9,rep,name=containerPorts"`
+	// The list of ports that are exposed by this service.
+	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+	// +patchMergeKey=port
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=port
+	// +listMapKey=protocol
+	ServicePorts []coreV1.ServicePort `json:"servicePorts,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,10,rep,name=servicePorts"`
 }
 
 //Campaign is the sub spec for a HelixSaga resource
@@ -128,23 +142,6 @@ type GuildWarSpec struct {
 type AppNotificationSpec struct {
 	Dispatch HelixSagaCoreSpec `json:"dispatch"`
 	Logic    HelixSagaCoreSpec `json:"logic"`
-}
-
-// HelixSagaStatus is the status for a HelixSaga resource
-type HelixSagaStatus struct {
-	VersionStatus         HelixSagaCoreStatus   `json:"version_status"`
-	ApiStatus             HelixSagaCoreStatus   `json:"api_status"`
-	GameStatus            HelixSagaCoreStatus   `json:"game_status"`
-	PayNotifyStatus       HelixSagaCoreStatus   `json:"pay_notify_status"`
-	GmtStatus             HelixSagaCoreStatus   `json:"gmt_status"`
-	FriendStatus          HelixSagaCoreStatus   `json:"friend_status"`
-	QueueStatus           HelixSagaCoreStatus   `json:"queue_status"`
-	RankStatus            HelixSagaCoreStatus   `json:"rank_status"`
-	ChatStatus            PhpWorkermanStatus    `json:"chat_status"`
-	HeartStatus           PhpWorkermanStatus    `json:"heart_status"`
-	CampaignStatus        CampaignStatus        `json:"campaign_status"`
-	GuildWarStatus        GuildWarStatus        `json:"guild_war_status"`
-	AppNotificationStatus AppNotificationStatus `json:"app_notification_status"`
 }
 
 //HelixSagaCoreStatus is the sub status for a HelixSaga resource
@@ -204,8 +201,8 @@ type AppNotificationStatus struct {
 
 //HelixSagaList is a list of HelixSaga resources
 type HelixSagaList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
+	metaV1.TypeMeta `json:",inline"`
+	metaV1.ListMeta `json:"metadata"`
 
 	Items []HelixSaga `json:"items"`
 }

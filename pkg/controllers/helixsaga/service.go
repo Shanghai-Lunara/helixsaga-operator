@@ -14,6 +14,7 @@ func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) *
 	labels := map[string]string{
 		"app":        operatorKindName,
 		"controller": hs.Name,
+		"role":       spec.Name,
 	}
 	return &coreV1.Service{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -25,11 +26,7 @@ func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) *
 			Labels: labels,
 		},
 		Spec: coreV1.ServiceSpec{
-			Ports: []coreV1.ServicePort{
-				{
-					Port: NginxPhpFpmDefaultPort,
-				},
-			},
+			Ports:    spec.ServicePorts,
 			Selector: labels,
 		},
 	}

@@ -41,62 +41,166 @@ spec:
       mountPath: /var/www/app/conf
       name: test-conf-volume
   services:
-  - spec:
-      name: "hs-cn1-version"
-      replicas: 1
-      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
-      imagePullSecrets:
-      - name: private-harbor
-      env:
-        - name: GET_HOSTS_FROM
-          value: dns
-        - name: ENV_ROOT_PATH
-          value: "/var/www/app/version"
-  - spec:
-      name: "hs-cn1-game"
-      replicas: 1
-      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
-      imagePullSecrets:
-        - name: private-harbor
-      env:
-        - name: GET_HOSTS_FROM
-          value: dns
-        - name: ENV_ROOT_PATH
-          value: "/var/www/app/game/index"
-  - spec:
-      name: "hs-cn1-gmt"
-      replicas: 1
-      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
-      imagePullSecrets:
-        - name: private-harbor
-      env:
-        - name: GET_HOSTS_FROM
-          value: dns
-        - name: ENV_ROOT_PATH
-          value: "/var/www/app/gmt"
-  - spec:
-      name: "hs-cn1-friend"
-      replicas: 1
-      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
-      imagePullSecrets:
-        - name: private-harbor
-      env:
-        - name: GET_HOSTS_FROM
-          value: dns
-        - name: ENV_ROOT_PATH
-          value: "/var/www/app/"
-      command: ["php"]
-      args: ["/var/www/app/extensions/friend_server.php", "debug"]
-  - spec:
-      name: "hs-cn1-rank"
-      replicas: 1
-      image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
-      imagePullSecrets:
-        - name: private-harbor
-      env:
-        - name: GET_HOSTS_FROM
-          value: dns
-        - name: ENV_ROOT_PATH
-          value: "/var/www/app/"
-      command: ["php"]
-      args: ["/var/www/app/extensions/rank_server.php", "debug"]
+    - spec:
+        name: "hs-cn1-version"
+        replicas: 1
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/version"
+        containerPorts:
+          - containerPort: 80
+            protocol: TCP
+        servicePorts:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+    - spec:
+        name: "hs-cn1-game"
+        replicas: 1
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/game/index"
+        containerPorts:
+          - containerPort: 80
+            protocol: TCP
+        servicePorts:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+    - spec:
+        name: "hs-cn1-gmt"
+        replicas: 1
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/gmt"
+        containerPorts:
+          - containerPort: 80
+            protocol: TCP
+        servicePorts:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+    - spec:
+        name: "hs-cn1-friend"
+        replicas: 1
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/"
+        command: ["php"]
+        args: ["/var/www/app/extensions/friend_server.php", "debug"]
+        containerPorts:
+          - containerPort: 80
+            protocol: TCP
+        servicePorts:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+    - spec:
+        name: "hs-cn1-rank"
+        replicas: 1
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/"
+        command: ["php"]
+        args: ["/var/www/app/extensions/rank_server.php", "debug"]
+        containerPorts:
+          - containerPort: 80
+            protocol: TCP
+        servicePorts:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+    - spec:
+        name: "hs-cn1-heart-register"
+        replicas: 1
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/"
+        command: ["php"]
+        args: ["/var/www/app/long_connection/heart/start.php", "start", "-f", "register"]
+        containerPorts:
+          - containerPort: 5120
+            protocol: TCP
+        servicePorts:
+          - port: 5120
+            protocol: TCP
+            targetPort: 5120
+    - spec:
+        name: "hs-cn1-heart-gateway"
+        replicas: 2
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/"
+        command: ["php"]
+        args: ["/var/www/app/long_connection/heart/start.php", "start", "-f", "gateway"]
+        containerPorts:
+          - containerPort: 5321
+            protocol: TCP
+            name: ext
+          - containerPort: 5121
+            protocol: TCP
+            name: inner
+        servicePorts:
+          - port: 5321
+            protocol: TCP
+            targetPort: 5321
+            name: ext
+          - port: 5121
+            protocol: TCP
+            targetPort: 5121
+            name: inner
+    - spec:
+        name: "hs-cn1-heart-worker"
+        replicas: 5
+        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        imagePullSecrets:
+          - name: private-harbor
+        env:
+          - name: GET_HOSTS_FROM
+            value: dns
+          - name: ENV_ROOT_PATH
+            value: "/var/www/app/"
+        command: ["php"]
+        args: ["/var/www/app/long_connection/heart/start.php", "start", "-f", "worker"]
+        containerPorts:
+          - containerPort: 80
+            protocol: TCP
+        servicePorts:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
