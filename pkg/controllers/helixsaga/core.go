@@ -18,10 +18,10 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			return err
 		}
 		klog.Info("new statefulSet")
-		if ss, err = ks.StatefulSet().Create(hs.Namespace, spec.Name, NewStatefulSet(hs, spec)); err != nil {
+		if ss, err = ks.StatefulSet().Create(hs.Namespace,  NewStatefulSet(hs, spec)); err != nil {
 			return err
 		}
-		if _, err = ks.Service().Create(hs.Namespace, spec.Name, NewService(hs, spec)); err != nil {
+		if _, err = ks.Service().Create(hs.Namespace, NewService(hs, spec)); err != nil {
 			return err
 		}
 	}
