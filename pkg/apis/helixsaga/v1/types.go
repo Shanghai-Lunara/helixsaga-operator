@@ -28,11 +28,8 @@ type HelixSaga struct {
 
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
-	ConfigMap           HelixSagaConfigMap  `json:"config_map"`
-	Services            []HelixSagaCore     `json:"services"`
-	CampaignSpec        CampaignSpec        `json:"campaign_spec"`
-	GuildWarSpec        GuildWarSpec        `json:"guild_war_spec"`
-	AppNotificationSpec AppNotificationSpec `json:"app_notification_spec"`
+	ConfigMap HelixSagaConfigMap `json:"config_map"`
+	Services  []HelixSagaCore    `json:"services"`
 }
 
 type HelixSagaConfigMap struct {
@@ -131,23 +128,6 @@ type HelixSagaCoreSpec struct {
 	ServicePorts []corev1.ServicePort `json:"servicePorts,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,11,rep,name=servicePorts"`
 }
 
-//Campaign is the sub spec for a HelixSaga resource
-type CampaignSpec struct {
-	Gateway HelixSagaCoreSpec `json:"gateway"`
-}
-
-//GuildWarSpec is the sub spec for a HelixSaga resource
-type GuildWarSpec struct {
-	Register HelixSagaCoreSpec `json:"register"`
-	Gateway  HelixSagaCoreSpec `json:"gateway"`
-}
-
-//AppNotificationSpec is the sub spec for a HelixSaga resource
-type AppNotificationSpec struct {
-	Dispatch HelixSagaCoreSpec `json:"dispatch"`
-	Logic    HelixSagaCoreSpec `json:"logic"`
-}
-
 //HelixSagaCoreStatus is the sub status for a HelixSaga resource
 type HelixSagaCoreStatus struct {
 	// The generation observed by the deployment controller.
@@ -175,30 +155,6 @@ type HelixSagaCoreStatus struct {
 	// either be pods that are running but not yet available or pods that still have not been created.
 	// +optional
 	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty" protobuf:"varint,6,opt,name=unavailableReplicas"`
-}
-
-//PhpWorkermanStatus is the sub Status for a HelixSaga resource
-type PhpWorkermanStatus struct {
-	RegisterStatus       HelixSagaCoreStatus `json:"register_status"`
-	GatewayStatus        HelixSagaCoreStatus `json:"gateway_status"`
-	BusinessWorkerStatus HelixSagaCoreStatus `json:"business_worker_status"`
-}
-
-//Campaign is the sub Status for a HelixSaga resource
-type CampaignStatus struct {
-	GatewayStatus HelixSagaCoreStatus `json:"gateway_status"`
-}
-
-//GuildWarStatus is the sub Status for a HelixSaga resource
-type GuildWarStatus struct {
-	RegisterStatus HelixSagaCoreStatus `json:"register_status"`
-	GatewayStatus  HelixSagaCoreStatus `json:"gateway_status"`
-}
-
-//AppNotificationStatus is the sub Status for a HelixSaga resource
-type AppNotificationStatus struct {
-	DispatchStatus HelixSagaCoreStatus `json:"dispatch_status"`
-	LogicStatus    HelixSagaCoreStatus `json:"logic_status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
