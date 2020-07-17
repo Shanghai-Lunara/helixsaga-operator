@@ -40,11 +40,11 @@ spec:
     volumeMount:
       mountPath: /var/www/app/conf
       name: test-conf-volume
-  services:
+  applications:
     - spec:
         name: "hs-cn1-version"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -62,7 +62,7 @@ spec:
     - spec:
         name: "hs-cn1-game"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -80,7 +80,7 @@ spec:
     - spec:
         name: "hs-cn1-gmt"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -98,7 +98,7 @@ spec:
     - spec:
         name: "hs-cn1-friend"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -118,7 +118,7 @@ spec:
     - spec:
         name: "hs-cn1-rank"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -138,7 +138,7 @@ spec:
     - spec:
         name: "hs-cn1-heart-register"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -158,7 +158,7 @@ spec:
     - spec:
         name: "hs-cn1-heart-gateway"
         replicas: 2
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -187,7 +187,7 @@ spec:
     - spec:
         name: "hs-cn1-heart-worker"
         replicas: 5
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -207,7 +207,7 @@ spec:
     - spec:
         name: "hs-cn1-chat-register"
         replicas: 1
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -227,7 +227,7 @@ spec:
     - spec:
         name: "hs-cn1-chat-gateway"
         replicas: 2
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:
@@ -256,7 +256,7 @@ spec:
     - spec:
         name: "hs-cn1-chat-worker"
         replicas: 5
-        image: 39.99.229.222:37229/helix-saga/helix-saga-all:latest
+        image: harbor.domain.com/helix-saga/helix-saga-all:latest
         imagePullSecrets:
           - name: private-harbor
         env:

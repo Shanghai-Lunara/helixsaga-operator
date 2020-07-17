@@ -90,7 +90,7 @@ func Get(foo interface{}, nameSpace, ownerRefName string) (obj interface{}, err 
 func Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
 	hs := obj.(*helixsagav1.HelixSaga)
 	clientSet := clientObj.(helixsagaclientset.Interface)
-	for _, v := range hs.Spec.Services {
+	for _, v := range hs.Spec.Applications {
 		klog.Info("v:", v)
 		if err := NewStatefulSetAndService(ks, clientSet, hs, v.Spec); err != nil {
 			klog.V(2).Info(err)

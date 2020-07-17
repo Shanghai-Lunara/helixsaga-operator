@@ -20,26 +20,26 @@ type HelixSaga struct {
 	//  - self link
 	//  - labels
 	//  - ... etc ...
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Spec is the custom resource spec
-	Spec HelixSagaSpec `json:"spec"`
+	Spec HelixSagaSpec `json:"spec" protobuf:"bytes,2,opt,name=spec"`
 }
 
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
-	ConfigMap HelixSagaConfigMap `json:"config_map"`
-	Services  []HelixSagaCore    `json:"services"`
+	ConfigMap    HelixSagaConfigMap `json:"configMap" protobuf:"bytes,1,opt,name=configMap"`
+	Applications []HelixSagaCore    `json:"applications" protobuf:"bytes,2,opt,name=applications"`
 }
 
 type HelixSagaConfigMap struct {
-	Volume      corev1.Volume      `json:"volume"`
-	VolumeMount corev1.VolumeMount `json:"volumeMount"`
+	Volume      corev1.Volume      `json:"volume" protobuf:"bytes,1,rep,name=volumes"`
+	VolumeMount corev1.VolumeMount `json:"volumeMount" protobuf:"bytes,2,rep,name=volumeMount"`
 }
 
 type HelixSagaCore struct {
-	Spec   HelixSagaCoreSpec   `json:"spec"`
-	Status HelixSagaCoreStatus `json:"status"`
+	Spec   HelixSagaCoreSpec   `json:"spec" protobuf:"bytes,1,rep,name=spec"`
+	Status HelixSagaCoreStatus `json:"status" protobuf:"bytes,2,rep,name=status"`
 }
 
 //HelixSagaCoreSpec is the sub spec for a HelixSaga resource
@@ -126,6 +126,8 @@ type HelixSagaCoreSpec struct {
 	// +listMapKey=port
 	// +listMapKey=protocol
 	ServicePorts []corev1.ServicePort `json:"servicePorts,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,11,rep,name=servicePorts"`
+	// The path of the nas disk which was mounted on the machine
+	VolumePath string `json:"volumePath" protobuf:"bytes,12,rep,name=volumePath"`
 }
 
 //HelixSagaCoreStatus is the sub status for a HelixSaga resource
@@ -162,7 +164,7 @@ type HelixSagaCoreStatus struct {
 //HelixSagaList is a list of HelixSaga resources
 type HelixSagaList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []HelixSaga `json:"items"`
+	// +optional
+	metav1.ListMeta `json:"metadata" protobuf:"bytes,1,opt,name=metadata"`
+	Items           []HelixSaga `json:"items" protobuf:"bytes,2,opt,name=items"`
 }

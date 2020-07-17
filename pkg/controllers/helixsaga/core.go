@@ -18,7 +18,7 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			return err
 		}
 		klog.Info("new statefulSet")
-		if ss, err = ks.StatefulSet().Create(hs.Namespace,  NewStatefulSet(hs, spec)); err != nil {
+		if ss, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
 			return err
 		}
 		if _, err = ks.Service().Create(hs.Namespace, NewService(hs, spec)); err != nil {
@@ -47,15 +47,15 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
 	fooCopy := foo.DeepCopy()
-	t := make([]helixSagaV1.HelixSagaCore , 0)
-	for _, v := range fooCopy.Spec.Services {
+	t := make([]helixSagaV1.HelixSagaCore, 0)
+	for _, v := range fooCopy.Spec.Applications {
 		if v.Spec.Name == name {
 			v.Status.Replicas = ss.Status.Replicas
 			v.Status.AvailableReplicas = ss.Status.Replicas
 		}
 		t = append(t, v)
 	}
-	fooCopy.Spec.Services = t
+	fooCopy.Spec.Applications = t
 
 	// If the CustomResourceSubResources feature gate is not enabled,
 	// we must use Update instead of UpdateStatus to update the Status block of the RedisOperator resource.

@@ -202,8 +202,8 @@ func (in *HelixSagaList) DeepCopyObject() runtime.Object {
 func (in *HelixSagaSpec) DeepCopyInto(out *HelixSagaSpec) {
 	*out = *in
 	in.ConfigMap.DeepCopyInto(&out.ConfigMap)
-	if in.Services != nil {
-		in, out := &in.Services, &out.Services
+	if in.Applications != nil {
+		in, out := &in.Applications, &out.Applications
 		*out = make([]HelixSagaCore, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
