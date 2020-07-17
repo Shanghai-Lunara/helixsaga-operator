@@ -1,8 +1,8 @@
 package v1
 
 import (
-	coreV1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +genclient
@@ -12,7 +12,7 @@ import (
 //HelixSaga describes a HelixSaga resource
 type HelixSaga struct {
 	// TypeMeta is the metadata for the resource, like kind and apiversion
-	metaV1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// ObjectMeta contains the metadata for the particular object, including
 	// things like...
 	//  - name
@@ -20,7 +20,7 @@ type HelixSaga struct {
 	//  - self link
 	//  - labels
 	//  - ... etc ...
-	metaV1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec is the custom resource spec
 	Spec HelixSagaSpec `json:"spec"`
@@ -36,8 +36,8 @@ type HelixSagaSpec struct {
 }
 
 type HelixSagaConfigMap struct {
-	Volume      coreV1.Volume      `json:"volume"`
-	VolumeMount coreV1.VolumeMount `json:"volumeMount"`
+	Volume      corev1.Volume      `json:"volume"`
+	VolumeMount corev1.VolumeMount `json:"volumeMount"`
 }
 
 type HelixSagaCore struct {
@@ -70,19 +70,23 @@ type HelixSagaCoreSpec struct {
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge
-	ImagePullSecrets []coreV1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,4,rep,name=imagePullSecrets"`
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,4,rep,name=imagePullSecrets"`
 	// List of environment variables to set in the container.
 	// Cannot be updated.
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge
-	Env []coreV1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,5,rep,name=env"`
+	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,5,rep,name=env"`
+	// Resources represents the minimum resources the volume should have.
+	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,6,opt,name=resources"`
 	// Pod volumes to mount into the container's filesystem.
 	// Cannot be updated.
 	// +optional
 	// +patchMergeKey=mountPath
 	// +patchStrategy=merge
-	VolumeMounts []coreV1.VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,6,rep,name=volumeMounts"`
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,7,rep,name=volumeMounts"`
 	// Entrypoint array. Not executed within a shell.
 	// The docker image's ENTRYPOINT is used if this is not provided.
 	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
@@ -92,7 +96,7 @@ type HelixSagaCoreSpec struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
-	Command []string `json:"command,omitempty" protobuf:"bytes,7,rep,name=command"`
+	Command []string `json:"command,omitempty" protobuf:"bytes,8,rep,name=command"`
 	// Arguments to the entrypoint.
 	// The docker image's CMD is used if this is not provided.
 	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
@@ -102,7 +106,7 @@ type HelixSagaCoreSpec struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
-	Args []string `json:"args,omitempty" protobuf:"bytes,8,rep,name=args"`
+	Args []string `json:"args,omitempty" protobuf:"bytes,9,rep,name=args"`
 	// List of ports to expose from the container. Exposing a port here gives
 	// the system additional information about the network connections a
 	// container uses, but is primarily informational. Not specifying a port here
@@ -116,7 +120,7 @@ type HelixSagaCoreSpec struct {
 	// +listType=map
 	// +listMapKey=containerPort
 	// +listMapKey=protocol
-	ContainerPorts []coreV1.ContainerPort `json:"containerPorts,omitempty" patchStrategy:"merge" patchMergeKey:"containerPort" protobuf:"bytes,9,rep,name=containerPorts"`
+	ContainerPorts []corev1.ContainerPort `json:"containerPorts,omitempty" patchStrategy:"merge" patchMergeKey:"containerPort" protobuf:"bytes,10,rep,name=containerPorts"`
 	// The list of ports that are exposed by this service.
 	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
 	// +patchMergeKey=port
@@ -124,7 +128,7 @@ type HelixSagaCoreSpec struct {
 	// +listType=map
 	// +listMapKey=port
 	// +listMapKey=protocol
-	ServicePorts []coreV1.ServicePort `json:"servicePorts,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,10,rep,name=servicePorts"`
+	ServicePorts []corev1.ServicePort `json:"servicePorts,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,11,rep,name=servicePorts"`
 }
 
 //Campaign is the sub spec for a HelixSaga resource
@@ -201,8 +205,8 @@ type AppNotificationStatus struct {
 
 //HelixSagaList is a list of HelixSaga resources
 type HelixSagaList struct {
-	metaV1.TypeMeta `json:",inline"`
-	metaV1.ListMeta `json:"metadata"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
 
 	Items []HelixSaga `json:"items"`
 }

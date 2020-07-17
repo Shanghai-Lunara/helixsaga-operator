@@ -34,8 +34,7 @@ func NewController(
 		helixSagaScheme.AddToScheme(scheme.Scheme),
 		sampleclientset,
 		fooInformer,
-		fooInformer.Informer().HasSynced,
-		fooInformer.Informer().AddEventHandler,
+		fooInformer.Informer(),
 		CompareResourceVersion,
 		Get,
 		Sync)

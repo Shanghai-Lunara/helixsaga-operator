@@ -1,9 +1,15 @@
 .DS_Store
 
+# dir
 vendor
 
+# shell
 make.sh
+
+# fake yaml
+fake.yaml
 
 # bin files
 crd
 helixsagacrd
+
