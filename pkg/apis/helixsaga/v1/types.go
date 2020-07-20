@@ -34,7 +34,7 @@ type HelixSagaSpec struct {
 }
 
 type HelixSagaConfigMap struct {
-	Volume      corev1.Volume      `json:"volume" protobuf:"bytes,1,rep,name=volumes"`
+	Volume      corev1.Volume      `json:"volume" protobuf:"bytes,1,rep,name=volume"`
 	VolumeMount corev1.VolumeMount `json:"volumeMount" protobuf:"bytes,2,rep,name=volumeMount"`
 }
 
