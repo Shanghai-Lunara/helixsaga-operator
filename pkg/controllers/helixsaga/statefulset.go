@@ -20,7 +20,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 	t := coreV1.HostPathDirectoryOrCreate
 	hostPath := &coreV1.HostPathVolumeSource{
 		Type: &t,
-		Path: fmt.Sprintf("/mnt/ssd1/helixsaga/%s", spec.Name),
+		Path: fmt.Sprintf("%s/helixsaga/%s", spec.VolumePath, spec.Name),
 	}
 	return &appsV1.StatefulSet{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -63,8 +63,9 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpe
 									Name:      "task-pv-storage",
 								},
 							},
-							Command: spec.Command,
-							Args:    spec.Args,
+							Command:   spec.Command,
+							Args:      spec.Args,
+							Resources: spec.Resources,
 						},
 					},
 					ImagePullSecrets: spec.ImagePullSecrets,
