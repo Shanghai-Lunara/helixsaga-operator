@@ -44,20 +44,14 @@ message HelixSaga {
   optional HelixSagaSpec spec = 2;
 }
 
-message HelixSagaConfigMap {
-  optional k8s.io.api.core.v1.Volume volume = 1;
+message HelixSagaApp {
+  optional HelixSagaAppSpec spec = 1;
 
-  optional k8s.io.api.core.v1.VolumeMount volumeMount = 2;
+  optional HelixSagaAppStatus status = 2;
 }
 
-message HelixSagaCore {
-  optional HelixSagaCoreSpec spec = 1;
-
-  optional HelixSagaCoreStatus status = 2;
-}
-
-// HelixSagaCoreSpec is the sub spec for a HelixSaga resource
-message HelixSagaCoreSpec {
+// HelixSagaAppSpec is the sub spec for a HelixSaga resource
+message HelixSagaAppSpec {
   // Name of the container specified as a DNS_LABEL.
   // Each container in a pod must have a unique name (DNS_LABEL).
   // Cannot be updated.
@@ -155,8 +149,8 @@ message HelixSagaCoreSpec {
   optional string volumePath = 12;
 }
 
-// HelixSagaCoreStatus is the sub status for a HelixSaga resource
-message HelixSagaCoreStatus {
+// HelixSagaAppStatus is the sub status for a HelixSaga resource
+message HelixSagaAppStatus {
   // The generation observed by the deployment controller.
   // +optional
   optional int64 observedGeneration = 1;
@@ -184,6 +178,12 @@ message HelixSagaCoreStatus {
   optional int32 unavailableReplicas = 6;
 }
 
+message HelixSagaConfigMap {
+  optional k8s.io.api.core.v1.Volume volume = 1;
+
+  optional k8s.io.api.core.v1.VolumeMount volumeMount = 2;
+}
+
 // HelixSagaList is a list of HelixSaga resources
 message HelixSagaList {
   // +optional
@@ -196,6 +196,6 @@ message HelixSagaList {
 message HelixSagaSpec {
   optional HelixSagaConfigMap configMap = 1;
 
-  repeated HelixSagaCore applications = 2;
+  repeated HelixSagaApp applications = 2;
 }
 

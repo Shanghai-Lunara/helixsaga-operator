@@ -30,7 +30,7 @@ type HelixSaga struct {
 //HelixSagaSpec is the spec for a HelixSaga resource
 type HelixSagaSpec struct {
 	ConfigMap    HelixSagaConfigMap `json:"configMap" protobuf:"bytes,1,opt,name=configMap"`
-	Applications []HelixSagaCore    `json:"applications" protobuf:"bytes,2,opt,name=applications"`
+	Applications []HelixSagaApp     `json:"applications" protobuf:"bytes,2,opt,name=applications"`
 }
 
 type HelixSagaConfigMap struct {
@@ -38,13 +38,13 @@ type HelixSagaConfigMap struct {
 	VolumeMount corev1.VolumeMount `json:"volumeMount" protobuf:"bytes,2,rep,name=volumeMount"`
 }
 
-type HelixSagaCore struct {
-	Spec   HelixSagaCoreSpec   `json:"spec" protobuf:"bytes,1,rep,name=spec"`
-	Status HelixSagaCoreStatus `json:"status" protobuf:"bytes,2,rep,name=status"`
+type HelixSagaApp struct {
+	Spec   HelixSagaAppSpec   `json:"spec" protobuf:"bytes,1,rep,name=spec"`
+	Status HelixSagaAppStatus `json:"status" protobuf:"bytes,2,rep,name=status"`
 }
 
-//HelixSagaCoreSpec is the sub spec for a HelixSaga resource
-type HelixSagaCoreSpec struct {
+//HelixSagaAppSpec is the sub spec for a HelixSaga resource
+type HelixSagaAppSpec struct {
 	// Name of the container specified as a DNS_LABEL.
 	// Each container in a pod must have a unique name (DNS_LABEL).
 	// Cannot be updated.
@@ -131,8 +131,8 @@ type HelixSagaCoreSpec struct {
 	VolumePath string `json:"volumePath" protobuf:"bytes,12,rep,name=volumePath"`
 }
 
-//HelixSagaCoreStatus is the sub status for a HelixSaga resource
-type HelixSagaCoreStatus struct {
+//HelixSagaAppStatus is the sub status for a HelixSaga resource
+type HelixSagaAppStatus struct {
 	// The generation observed by the deployment controller.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,1,opt,name=observedGeneration"`
