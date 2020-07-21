@@ -3,7 +3,7 @@ kind: HelixSaga
 metadata:
   name: example-helixsaga
 spec:
-  config_map:
+  configMap:
     volume:
       name: test-conf-volume
       configMap:
