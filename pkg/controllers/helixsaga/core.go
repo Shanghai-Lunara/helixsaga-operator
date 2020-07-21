@@ -10,7 +10,7 @@ import (
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
-func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) error {
+func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) error {
 	ss, err := ks.StatefulSet().Get(hs.Namespace, spec.Name)
 	if err != nil {
 		klog.Info("statefulSet err:", err)
@@ -47,7 +47,7 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
 	fooCopy := foo.DeepCopy()
-	t := make([]helixSagaV1.HelixSagaCore, 0)
+	t := make([]helixSagaV1.HelixSagaApp, 0)
 	for _, v := range fooCopy.Spec.Applications {
 		if v.Spec.Name == name {
 			v.Status.Replicas = ss.Status.Replicas

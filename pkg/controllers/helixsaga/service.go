@@ -10,7 +10,7 @@ import (
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
-func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaCoreSpec) *coreV1.Service {
+func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *coreV1.Service {
 	labels := map[string]string{
 		"app":        operatorKindName,
 		"controller": hs.Name,
