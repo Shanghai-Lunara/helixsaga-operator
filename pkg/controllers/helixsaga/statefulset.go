@@ -20,7 +20,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 	t := coreV1.HostPathDirectoryOrCreate
 	hostPath := &coreV1.HostPathVolumeSource{
 		Type: &t,
-		Path: fmt.Sprintf("%s/helixsaga/%s", spec.VolumePath, spec.Name),
+		Path: fmt.Sprintf("%s/%s/helixsaga/%s", spec.VolumePath, hs.Namespace, spec.Name),
 	}
 	return &appsV1.StatefulSet{
 		ObjectMeta: metaV1.ObjectMeta{
