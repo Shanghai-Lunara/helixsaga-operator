@@ -8,6 +8,11 @@ import (
 	"github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga"
 )
 
+const (
+	GroupName = "nevercase.io"
+	Version   = "v1"
+)
+
 // GroupVersion is the identifier for the API which includes
 // the name of the group and the version of the API
 var SchemeGroupVersion = schema.GroupVersion{

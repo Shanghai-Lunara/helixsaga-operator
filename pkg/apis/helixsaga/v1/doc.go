@@ -1,4 +1,4 @@
 // +k8s:deepcopy-gen=package
 
-// +groupName=helixsaga.nevercase.io
+// +groupName=nevercase.io
 package v1
