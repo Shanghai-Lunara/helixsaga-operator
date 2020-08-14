@@ -4,8 +4,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga"
 )
 
 const (
@@ -16,8 +14,8 @@ const (
 // GroupVersion is the identifier for the API which includes
 // the name of the group and the version of the API
 var SchemeGroupVersion = schema.GroupVersion{
-	Group:   helixsaga.GroupName,
-	Version: helixsaga.Version,
+	Group:   GroupName,
+	Version: Version,
 }
 
 // create a SchemeBuilder which uses functions to add types to

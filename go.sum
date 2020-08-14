@@ -12,6 +12,7 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
+github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200814042007-be3103b89b40/go.mod h1:X4p3JEdthf2A8Jl/hGATLU7wuFroPT1DsSLnJXRHt1w=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/davecgh/go-spew v0.0.0-20151105211317-5215b55f46b2/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -99,6 +100,8 @@ github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200511100936-cc89d4
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200511100936-cc89d45c50c7/go.mod h1:mHXRdqBNDRbDH/bBAZk7pme6VA+PwxLngXR+cErTX0I=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200717080405-ac4619074009 h1:37+mJX6gp+KdgUuSkS9QpBqfaGPDiPSdNALAdwH1Yro=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200717080405-ac4619074009/go.mod h1:9eK+R0nkBYAe0JXVF5svNwvPfsuOUrLPOiEEvcvjnnw=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200814062711-3a466b2f7cf3 h1:X/5/HJewAh9uWorizm4XIvS4mmFMrnexHe4fSoim48Y=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200814062711-3a466b2f7cf3/go.mod h1:mtoT/UOmYMYcqfSCT4VFLsb6xVvBQBykwAh6KQX86Xo=
 github.com/nevercase/k8s-controller-custom-resource v0.1.0 h1:oPtgTPcitdsm7kxjzBrrrp0NVjTeaK+vsgDLDVBarp4=
 github.com/nevercase/k8s-controller-custom-resource v0.1.0/go.mod h1:mHXRdqBNDRbDH/bBAZk7pme6VA+PwxLngXR+cErTX0I=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
