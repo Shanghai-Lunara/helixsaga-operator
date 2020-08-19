@@ -50,8 +50,14 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	t := make([]helixSagaV1.HelixSagaApp, 0)
 	for _, v := range fooCopy.Spec.Applications {
 		if v.Spec.Name == name {
+			v.Status.ObservedGeneration = ss.Status.ObservedGeneration
 			v.Status.Replicas = ss.Status.Replicas
-			v.Status.AvailableReplicas = ss.Status.Replicas
+			v.Status.ReadyReplicas = ss.Status.ReadyReplicas
+			v.Status.CurrentReplicas = ss.Status.CurrentReplicas
+			v.Status.UpdatedReplicas = ss.Status.UpdatedReplicas
+			v.Status.CurrentRevision = ss.Status.CurrentRevision
+			v.Status.UpdateRevision = ss.Status.UpdateRevision
+			v.Status.CollisionCount = ss.Status.CollisionCount
 		}
 		t = append(t, v)
 	}
@@ -61,6 +67,6 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	// we must use Update instead of UpdateStatus to update the Status block of the RedisOperator resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := clientSet.HelixsagaV1().HelixSagas(foo.Namespace).Update(fooCopy)
+	_, err := clientSet.NevercaseV1().HelixSagas(foo.Namespace).Update(fooCopy)
 	return err
 }

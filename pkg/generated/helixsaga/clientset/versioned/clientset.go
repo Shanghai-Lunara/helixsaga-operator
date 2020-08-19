@@ -21,7 +21,7 @@ package versioned
 import (
 	"fmt"
 
-	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/typed/helixsaga/v1"
+	nevercasev1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/typed/helixsaga/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -29,19 +29,19 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	HelixsagaV1() helixsagav1.HelixsagaV1Interface
+	NevercaseV1() nevercasev1.NevercaseV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	helixsagaV1 *helixsagav1.HelixsagaV1Client
+	nevercaseV1 *nevercasev1.NevercaseV1Client
 }
 
-// HelixsagaV1 retrieves the HelixsagaV1Client
-func (c *Clientset) HelixsagaV1() helixsagav1.HelixsagaV1Interface {
-	return c.helixsagaV1
+// NevercaseV1 retrieves the NevercaseV1Client
+func (c *Clientset) NevercaseV1() nevercasev1.NevercaseV1Interface {
+	return c.nevercaseV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,7 +65,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.helixsagaV1, err = helixsagav1.NewForConfig(&configShallowCopy)
+	cs.nevercaseV1, err = nevercasev1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.helixsagaV1 = helixsagav1.NewForConfigOrDie(c)
+	cs.nevercaseV1 = nevercasev1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -90,7 +90,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.helixsagaV1 = helixsagav1.New(c)
+	cs.nevercaseV1 = nevercasev1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

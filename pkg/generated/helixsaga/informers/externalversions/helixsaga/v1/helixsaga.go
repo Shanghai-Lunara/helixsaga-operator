@@ -61,13 +61,13 @@ func NewFilteredHelixSagaInformer(client versioned.Interface, namespace string, 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.HelixsagaV1().HelixSagas(namespace).List(options)
+				return client.NevercaseV1().HelixSagas(namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.HelixsagaV1().HelixSagas(namespace).Watch(options)
+				return client.NevercaseV1().HelixSagas(namespace).Watch(options)
 			},
 		},
 		&helixsagav1.HelixSaga{},

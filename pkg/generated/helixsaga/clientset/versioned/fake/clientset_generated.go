@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned"
-	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/typed/helixsaga/v1"
-	fakehelixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/typed/helixsaga/v1/fake"
+	nevercasev1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/typed/helixsaga/v1"
+	fakenevercasev1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/typed/helixsaga/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -76,7 +76,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// HelixsagaV1 retrieves the HelixsagaV1Client
-func (c *Clientset) HelixsagaV1() helixsagav1.HelixsagaV1Interface {
-	return &fakehelixsagav1.FakeHelixsagaV1{Fake: &c.Fake}
+// NevercaseV1 retrieves the NevercaseV1Client
+func (c *Clientset) NevercaseV1() nevercasev1.NevercaseV1Interface {
+	return &fakenevercasev1.FakeNevercaseV1{Fake: &c.Fake}
 }

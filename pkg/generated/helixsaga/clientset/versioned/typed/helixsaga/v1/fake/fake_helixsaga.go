@@ -30,13 +30,13 @@ import (
 
 // FakeHelixSagas implements HelixSagaInterface
 type FakeHelixSagas struct {
-	Fake *FakeHelixsagaV1
+	Fake *FakeNevercaseV1
 	ns   string
 }
 
-var helixsagasResource = schema.GroupVersionResource{Group: "helixsaga.nevercase.io", Version: "v1", Resource: "helixsagas"}
+var helixsagasResource = schema.GroupVersionResource{Group: "nevercase.io", Version: "v1", Resource: "helixsagas"}
 
-var helixsagasKind = schema.GroupVersionKind{Group: "helixsaga.nevercase.io", Version: "v1", Kind: "HelixSaga"}
+var helixsagasKind = schema.GroupVersionKind{Group: "nevercase.io", Version: "v1", Kind: "HelixSaga"}
 
 // Get takes name of the helixSaga, and returns the corresponding helixSaga object, and an error if there is any.
 func (c *FakeHelixSagas) Get(name string, options v1.GetOptions) (result *helixsagav1.HelixSaga, err error) {

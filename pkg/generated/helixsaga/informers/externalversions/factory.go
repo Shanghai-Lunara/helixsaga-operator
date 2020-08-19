@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Helixsaga() helixsaga.Interface
+	Nevercase() helixsaga.Interface
 }
 
-func (f *sharedInformerFactory) Helixsaga() helixsaga.Interface {
+func (f *sharedInformerFactory) Nevercase() helixsaga.Interface {
 	return helixsaga.New(f, f.namespace, f.tweakListOptions)
 }

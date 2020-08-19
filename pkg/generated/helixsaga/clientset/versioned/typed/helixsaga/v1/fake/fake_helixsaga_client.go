@@ -24,17 +24,17 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeHelixsagaV1 struct {
+type FakeNevercaseV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeHelixsagaV1) HelixSagas(namespace string) v1.HelixSagaInterface {
+func (c *FakeNevercaseV1) HelixSagas(namespace string) v1.HelixSagaInterface {
 	return &FakeHelixSagas{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeHelixsagaV1) RESTClient() rest.Interface {
+func (c *FakeNevercaseV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

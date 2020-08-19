@@ -55,7 +55,7 @@ type helixSagas struct {
 }
 
 // newHelixSagas returns a HelixSagas
-func newHelixSagas(c *HelixsagaV1Client, namespace string) *helixSagas {
+func newHelixSagas(c *NevercaseV1Client, namespace string) *helixSagas {
 	return &helixSagas{
 		client: c.RESTClient(),
 		ns:     namespace,

@@ -13,9 +13,9 @@ import (
 
 func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
 	labels := map[string]string{
-		"app":        operatorKindName,
-		"controller": hs.Name,
-		"role":       spec.Name,
+		k8sCoreV1.LabelApp:        OperatorKindName,
+		k8sCoreV1.LabelController: hs.Name,
+		k8sCoreV1.LabelName:       spec.Name,
 	}
 	t := coreV1.HostPathDirectoryOrCreate
 	hostPath := &coreV1.HostPathVolumeSource{
@@ -27,7 +27,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 			Name:      fmt.Sprintf(k8sCoreV1.StatefulSetNameTemplate, spec.Name),
 			Namespace: hs.Namespace,
 			OwnerReferences: []metaV1.OwnerReference{
-				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(operatorKindName)),
+				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(OperatorKindName)),
 			},
 			Labels: labels,
 		},

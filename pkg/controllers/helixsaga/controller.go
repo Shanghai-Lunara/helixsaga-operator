@@ -1,9 +1,12 @@
 package helixsaga
 
 import (
+	"fmt"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -25,20 +28,21 @@ func NewController(
 	stopCh <-chan struct{}) k8scorev1.KubernetesControllerV1 {
 
 	exampleInformerFactory := informersext.NewSharedInformerFactory(sampleclientset, time.Second*30)
-	fooInformer := exampleInformerFactory.Helixsaga().V1().HelixSagas()
+	fooInformer := exampleInformerFactory.Nevercase().V1().HelixSagas()
 
 	//roInformerFactory := informersv2.NewSharedInformerFactory(sampleclientset, time.Second*30)
 
 	opt := k8scorev1.NewOption(&helixsagav1.HelixSaga{},
 		controllerName,
-		operatorKindName,
+		OperatorKindName,
 		helixsagascheme.AddToScheme(scheme.Scheme),
 		sampleclientset,
 		fooInformer,
 		fooInformer.Informer(),
 		CompareResourceVersion,
 		Get,
-		Sync)
+		Sync,
+		SyncStatus)
 	opts := k8scorev1.NewOptions()
 	if err := opts.Add(opt); err != nil {
 		klog.Fatal(err)
@@ -56,17 +60,18 @@ func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}) 
 		klog.Fatal("Error building clientSet: %s", err.Error())
 	}
 	informerFactory := informersext.NewSharedInformerFactory(c, time.Second*30)
-	fooInformer := informerFactory.Helixsaga().V1().HelixSagas()
+	fooInformer := informerFactory.Nevercase().V1().HelixSagas()
 	opt := k8scorev1.NewOption(&helixsagav1.HelixSaga{},
 		controllerName,
-		operatorKindName,
+		OperatorKindName,
 		helixsagascheme.AddToScheme(scheme.Scheme),
 		c,
 		fooInformer,
 		fooInformer.Informer(),
 		CompareResourceVersion,
 		Get,
-		Sync)
+		Sync,
+		SyncStatus)
 	informerFactory.Start(stopCh)
 	return opt
 }
@@ -96,6 +101,32 @@ func Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResourc
 			klog.V(2).Info(err)
 			return err
 		}
+	}
+	recorder.Event(hs, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
+	return nil
+}
+
+func SyncStatus(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
+	clientSet := clientObj.(helixsagaclientset.Interface)
+	ss := obj.(*appsv1.StatefulSet)
+	var objName string
+	if t, ok := ss.Labels[k8scorev1.LabelController]; ok {
+		objName = t
+	} else {
+		return fmt.Errorf(ErrResourceNotMatch, "no controller")
+	}
+	hs, err := clientSet.NevercaseV1().HelixSagas(ss.Namespace).Get(objName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	var appName string
+	if t, ok := ss.Labels[k8scorev1.LabelName]; ok {
+		appName = t
+	} else {
+		return fmt.Errorf(ErrResourceNotMatch, "no appName")
+	}
+	if err := updateStatus(hs, clientSet, ss, appName); err != nil {
+		return err
 	}
 	recorder.Event(hs, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
 	return nil
