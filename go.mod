@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/gogo/protobuf v1.3.1
-	github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200819024455-58f90d01a554
+	github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200827085315-676144f47bbf
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.3
 	k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90
