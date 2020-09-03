@@ -10,9 +10,9 @@ import (
 
 func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *coreV1.Service {
 	labels := map[string]string{
-		"app":        OperatorKindName,
-		"controller": hs.Name,
-		"role":       spec.Name,
+		k8sCoreV1.LabelApp:        OperatorKindName,
+		k8sCoreV1.LabelController: hs.Name,
+		k8sCoreV1.LabelName:       spec.Name,
 	}
 	return &coreV1.Service{
 		ObjectMeta: metaV1.ObjectMeta{
