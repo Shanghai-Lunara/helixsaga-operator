@@ -24,7 +24,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 	}
 	return &appsV1.StatefulSet{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name:      fmt.Sprintf(k8sCoreV1.StatefulSetNameTemplate, spec.Name),
+			Name:      k8sCoreV1.GetStatefulSetName(spec.Name),
 			Namespace: hs.Namespace,
 			OwnerReferences: []metaV1.OwnerReference{
 				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(OperatorKindName)),
@@ -52,7 +52,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 					},
 					Containers: []coreV1.Container{
 						{
-							Name:  fmt.Sprintf(k8sCoreV1.ContainerNameTemplate, spec.Name),
+							Name:  k8sCoreV1.GetContainerName(spec.Name),
 							Image: spec.Image,
 							Ports: spec.ContainerPorts,
 							Env:   spec.Env,
@@ -63,9 +63,10 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 									Name:      "task-pv-storage",
 								},
 							},
-							Command:   spec.Command,
-							Args:      spec.Args,
-							Resources: spec.Resources,
+							Command:         spec.Command,
+							Args:            spec.Args,
+							Resources:       spec.Resources,
+							ImagePullPolicy: coreV1.PullAlways,
 						},
 					},
 					ImagePullSecrets: spec.ImagePullSecrets,

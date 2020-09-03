@@ -21,8 +21,10 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 		if ss, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
 			return err
 		}
-		if _, err = ks.Service().Create(hs.Namespace, NewService(hs, spec)); err != nil {
-			return err
+		if len(spec.ServicePorts) > 0 {
+			if _, err = ks.Service().Create(hs.Namespace, NewService(hs, spec)); err != nil {
+				return err
+			}
 		}
 	}
 	klog.Info("rds:", *spec.Replicas)
@@ -32,7 +34,14 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			klog.Info(err)
 			return err
 		}
-		if _, err = ks.Service().Update(hs.Namespace, NewService(hs, spec)); err != nil {
+		if len(spec.ServicePorts) > 0 {
+			if _, err = ks.Service().Update(hs.Namespace, NewService(hs, spec)); err != nil {
+				return err
+			}
+		}
+	}
+	if len(spec.ServicePorts) == 0 {
+		if err = ks.Service().Delete(hs.Namespace, k8sCoreV1.GetServiceName(spec.Name)); err != nil {
 			return err
 		}
 	}

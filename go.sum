@@ -15,6 +15,7 @@ github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdko
 github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200814042007-be3103b89b40/go.mod h1:X4p3JEdthf2A8Jl/hGATLU7wuFroPT1DsSLnJXRHt1w=
 github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200814081542-b45e20612cac/go.mod h1:k5FKRHr3pth5i5FmSiMaEi+aJ/XS80xJsgPyOnOj7nc=
 github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200819030844-966a05313a03/go.mod h1:vIc407KwSFJnSqRn6nM7nlZ8Bv+UCW4+qoxlrhtMnuQ=
+github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200827085804-abf53816be1d/go.mod h1:y/BiMiMBe5BfTU3nS4xmUm4RAwOUN5V7wTAzJejXpLo=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/davecgh/go-spew v0.0.0-20151105211317-5215b55f46b2/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -108,6 +109,8 @@ github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200819024455-58f90d
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200819024455-58f90d01a554/go.mod h1:yw57dsunJu6CpX1g3OHWrGmLI5o/iFM+aiVYwx1x154=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200827085315-676144f47bbf h1:oFHZTNGv/LL35EGEBR04vDohAZAo0rPXo5srcgBBo8o=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200827085315-676144f47bbf/go.mod h1:aFyOE1yIYJ8jNn+HVEbsswCrFeTSoAMlMB/bLinYbXY=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200903031135-33eb6f9412ea h1:jzijZekuE8B2MgRHHm0HxeyN/giOF8eWAaY0xjpJw9A=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200903031135-33eb6f9412ea/go.mod h1:xRhb9loaeozuRiCT5HlCDncSuoK/45iiOeAy8UiTLQM=
 github.com/nevercase/k8s-controller-custom-resource v0.1.0 h1:oPtgTPcitdsm7kxjzBrrrp0NVjTeaK+vsgDLDVBarp4=
 github.com/nevercase/k8s-controller-custom-resource v0.1.0/go.mod h1:mHXRdqBNDRbDH/bBAZk7pme6VA+PwxLngXR+cErTX0I=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=

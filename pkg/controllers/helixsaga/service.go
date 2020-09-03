@@ -1,8 +1,6 @@
 package helixsaga
 
 import (
-	"fmt"
-
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -18,7 +16,7 @@ func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *c
 	}
 	return &coreV1.Service{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name:      fmt.Sprintf(k8sCoreV1.ServiceNameTemplate, spec.Name),
+			Name:      k8sCoreV1.GetServiceName(spec.Name),
 			Namespace: hs.Namespace,
 			OwnerReferences: []metaV1.OwnerReference{
 				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(OperatorKindName)),
