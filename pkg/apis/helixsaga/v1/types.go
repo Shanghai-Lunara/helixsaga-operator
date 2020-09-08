@@ -127,8 +127,10 @@ type HelixSagaAppSpec struct {
 	// +listMapKey=port
 	// +listMapKey=protocol
 	ServicePorts []corev1.ServicePort `json:"servicePorts,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,11,rep,name=servicePorts"`
+	// The type of services
+	ServiceType corev1.ServiceType `json:"serviceType" protobuf:"bytes,12,rep,name=serviceType"`
 	// The path of the nas disk which was mounted on the machine
-	VolumePath string `json:"volumePath" protobuf:"bytes,12,rep,name=volumePath"`
+	VolumePath string `json:"volumePath" protobuf:"bytes,13,rep,name=volumePath"`
 }
 
 //HelixSagaAppStatus is the sub status for a HelixSaga resource

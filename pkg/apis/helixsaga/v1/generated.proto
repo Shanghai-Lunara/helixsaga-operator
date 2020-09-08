@@ -145,8 +145,11 @@ message HelixSagaAppSpec {
   // +listMapKey=protocol
   repeated k8s.io.api.core.v1.ServicePort servicePorts = 11;
 
+  // The type of services
+  optional string serviceType = 12;
+
   // The path of the nas disk which was mounted on the machine
-  optional string volumePath = 12;
+  optional string volumePath = 13;
 }
 
 // HelixSagaAppStatus is the sub status for a HelixSaga resource

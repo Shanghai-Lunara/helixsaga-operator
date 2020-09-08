@@ -24,6 +24,7 @@ func NewService(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *c
 			Labels: labels,
 		},
 		Spec: coreV1.ServiceSpec{
+			Type:     k8sCoreV1.GetServiceType(spec.ServiceType),
 			Ports:    spec.ServicePorts,
 			Selector: labels,
 		},
