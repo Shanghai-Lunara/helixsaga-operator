@@ -6,6 +6,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -95,6 +96,28 @@ func Get(foo interface{}, nameSpace, ownerRefName string) (obj interface{}, err 
 func Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
 	hs := obj.(*helixsagav1.HelixSaga)
 	clientSet := clientObj.(helixsagaclientset.Interface)
+	opts := metav1.GetOptions{ResourceVersion: hs.ResourceVersion}
+	old, err := clientSet.NevercaseV1().HelixSagas(hs.Namespace).Get(hs.Name, opts)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			klog.V(2).Info(err)
+			return err
+		} else {
+			names := make(map[string]bool, len(hs.Spec.Applications))
+			for _, v := range hs.Spec.Applications {
+				names[v.Spec.Name] = true
+			}
+			for _, v := range old.Spec.Applications {
+				if _, ok := names[v.Spec.Name]; !ok {
+					klog.Info("remove app-name:", v.Spec.Name)
+					if err := DeleteStatefulSetAndService(ks, hs.Namespace, v.Spec.Name); err != nil {
+						klog.V(2).Info(err)
+						return err
+					}
+				}
+			}
+		}
+	}
 	for _, v := range hs.Spec.Applications {
 		klog.Info("v:", v)
 		if err := NewStatefulSetAndService(ks, clientSet, hs, v.Spec); err != nil {

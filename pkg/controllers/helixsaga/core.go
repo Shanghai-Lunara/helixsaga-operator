@@ -92,3 +92,15 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	_, err := clientSet.NevercaseV1().HelixSagas(foo.Namespace).Update(fooCopy)
 	return err
 }
+
+func DeleteStatefulSetAndService(ks k8sCoreV1.KubernetesResource, namespace string, name string) error {
+	if err := ks.StatefulSet().Delete(namespace, name); err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	if err := ks.Service().Delete(namespace, k8sCoreV1.GetServiceName(name)); err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	return nil
+}
