@@ -19,6 +19,7 @@ import (
 	helixsagascheme "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned/scheme"
 	informersext "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/informers/externalversions"
 	informers "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/informers/externalversions/helixsaga/v1"
+	harbor "github.com/nevercase/harbor-api"
 	k8scorev1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
@@ -28,9 +29,10 @@ func NewController(
 	sampleclientset helixsagaclientset.Interface,
 	stopCh <-chan struct{}) k8scorev1.KubernetesControllerV1 {
 
+	controller := &controller{}
+
 	exampleInformerFactory := informersext.NewSharedInformerFactory(sampleclientset, time.Second*30)
 	fooInformer := exampleInformerFactory.Nevercase().V1().HelixSagas()
-
 	//roInformerFactory := informersv2.NewSharedInformerFactory(sampleclientset, time.Second*30)
 
 	opt := k8scorev1.NewOption(&helixsagav1.HelixSaga{},
@@ -40,10 +42,10 @@ func NewController(
 		sampleclientset,
 		fooInformer,
 		fooInformer.Informer(),
-		CompareResourceVersion,
-		Get,
-		Sync,
-		SyncStatus)
+		controller.CompareResourceVersion,
+		controller.Get,
+		controller.Sync,
+		controller.SyncStatus)
 	opts := k8scorev1.NewOptions()
 	if err := opts.Add(opt); err != nil {
 		klog.Fatal(err)
@@ -60,6 +62,7 @@ func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}) 
 	if err != nil {
 		klog.Fatal("Error building clientSet: %s", err.Error())
 	}
+	controller := &controller{}
 	informerFactory := informersext.NewSharedInformerFactory(c, time.Second*30)
 	fooInformer := informerFactory.Nevercase().V1().HelixSagas()
 	opt := k8scorev1.NewOption(&helixsagav1.HelixSaga{},
@@ -69,15 +72,19 @@ func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}) 
 		c,
 		fooInformer,
 		fooInformer.Informer(),
-		CompareResourceVersion,
-		Get,
-		Sync,
-		SyncStatus)
+		controller.CompareResourceVersion,
+		controller.Get,
+		controller.Sync,
+		controller.SyncStatus)
 	informerFactory.Start(stopCh)
 	return opt
 }
 
-func CompareResourceVersion(old, new interface{}) bool {
+type controller struct {
+	harborHub harbor.HubInterface
+}
+
+func (c *controller) CompareResourceVersion(old, new interface{}) bool {
 	newResource := new.(*helixsagav1.HelixSaga)
 	oldResource := old.(*helixsagav1.HelixSaga)
 	if newResource.ResourceVersion == oldResource.ResourceVersion {
@@ -88,12 +95,12 @@ func CompareResourceVersion(old, new interface{}) bool {
 	return false
 }
 
-func Get(foo interface{}, nameSpace, ownerRefName string) (obj interface{}, err error) {
+func (c *controller) Get(foo interface{}, nameSpace, ownerRefName string) (obj interface{}, err error) {
 	kc := foo.(informers.HelixSagaInformer)
 	return kc.Lister().HelixSagas(nameSpace).Get(ownerRefName)
 }
 
-func Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
+func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
 	hs := obj.(*helixsagav1.HelixSaga)
 	clientSet := clientObj.(helixsagaclientset.Interface)
 	opts := metav1.GetOptions{ResourceVersion: hs.ResourceVersion}
@@ -129,7 +136,7 @@ func Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResourc
 	return nil
 }
 
-func SyncStatus(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
+func (c *controller) SyncStatus(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
 	clientSet := clientObj.(helixsagaclientset.Interface)
 	ss := obj.(*appsv1.StatefulSet)
 	var objName string
