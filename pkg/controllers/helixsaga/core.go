@@ -3,6 +3,8 @@ package helixsaga
 import (
 	appsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/klog"
 
 	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
@@ -100,6 +102,23 @@ func DeleteStatefulSetAndService(ks k8sCoreV1.KubernetesResource, namespace stri
 	}
 	if err := ks.Service().Delete(namespace, k8sCoreV1.GetServiceName(name)); err != nil {
 		klog.V(2).Info(err)
+		return err
+	}
+	return nil
+}
+
+func PatchStatefulSet(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) error {
+	ss := GetStatefulSetImagePatch(hs, spec)
+	data, err := json.Marshal(*ss)
+	if err != nil {
+		klog.V(2).Info(err)
+	}
+	ss, err = ks.StatefulSet().Patch(hs.Namespace, hs.Name, types.MergePatchType, data)
+	if err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	if err = updateStatus(hs, client, ss, spec.Name); err != nil {
 		return err
 	}
 	return nil

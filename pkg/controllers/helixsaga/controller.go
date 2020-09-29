@@ -57,12 +57,14 @@ func NewController(
 	return kc
 }
 
-func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}) k8scorev1.Option {
+func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}, harborConfig []harbor.Config) k8scorev1.Option {
 	c, err := helixsagaclientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatal("Error building clientSet: %s", err.Error())
 	}
-	controller := &controller{}
+	controller := &controller{
+		harborHub: harbor.NewHub(harborConfig),
+	}
 	informerFactory := informersext.NewSharedInformerFactory(c, time.Second*30)
 	fooInformer := informerFactory.Nevercase().V1().HelixSagas()
 	opt := k8scorev1.NewOption(&helixsagav1.HelixSaga{},
@@ -88,8 +90,8 @@ func (c *controller) CompareResourceVersion(old, new interface{}) bool {
 	newResource := new.(*helixsagav1.HelixSaga)
 	oldResource := old.(*helixsagav1.HelixSaga)
 	if newResource.ResourceVersion == oldResource.ResourceVersion {
-		// Periodic resync will send update events for all known Deployments.
-		// Two different versions of the same Deployment will always have different RVs.
+		// Periodic resync will send update events for all known HelixSaga.
+		// Two different versions of the same HelixSaga will always have different RVs.
 		return true
 	}
 	return false

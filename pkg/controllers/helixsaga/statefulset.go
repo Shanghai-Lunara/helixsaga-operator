@@ -75,3 +75,27 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 		},
 	}
 }
+
+func GetStatefulSetImagePatch(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
+	return &appsV1.StatefulSet{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      k8sCoreV1.GetStatefulSetName(spec.Name),
+			Namespace: hs.Namespace,
+			OwnerReferences: []metaV1.OwnerReference{
+				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(OperatorKindName)),
+			},
+		},
+		Spec: appsV1.StatefulSetSpec{
+			Template: coreV1.PodTemplateSpec{
+				Spec: coreV1.PodSpec{
+					Containers: []coreV1.Container{
+						{
+							Name:  k8sCoreV1.GetContainerName(spec.Name),
+							Image: spec.Image,
+						},
+					},
+				},
+			},
+		},
+	}
+}
