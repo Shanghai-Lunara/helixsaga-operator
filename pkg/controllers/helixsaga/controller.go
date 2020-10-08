@@ -60,7 +60,7 @@ func NewController(
 func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}, harborConfig []harbor.Config) k8scorev1.Option {
 	c, err := helixsagaclientset.NewForConfig(cfg)
 	if err != nil {
-		klog.Fatal("Error building clientSet: %s", err.Error())
+		klog.Fatalf("Error building clientSet: %s", err.Error())
 	}
 	controller := &controller{
 		harborHub: harbor.NewHub(harborConfig),

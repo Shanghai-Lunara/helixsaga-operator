@@ -117,6 +117,8 @@ github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200908053329-9c0d33
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200929090222-6d2327d0e76f/go.mod h1:Q0wgVUFpTtHAnv1FNib/MUsW1rJ8eRrQbJtFpyU6E74=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200929090930-705a957a6f1f h1:OcFxa5+kN0KHVt7rYSv3W2SZKjy3eh1CpV4A5+j42Ug=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200929090930-705a957a6f1f/go.mod h1:Q0wgVUFpTtHAnv1FNib/MUsW1rJ8eRrQbJtFpyU6E74=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20201008035539-143fcc5213b7 h1:To/uE3YRc9k23ddLUwVDNznhdsrZAaxmK9p2rztYBIM=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20201008035539-143fcc5213b7/go.mod h1:Q0wgVUFpTtHAnv1FNib/MUsW1rJ8eRrQbJtFpyU6E74=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
