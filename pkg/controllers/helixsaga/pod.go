@@ -39,3 +39,4 @@ func GetLabelSelector(controllerName string, specName string) string {
 	ls = ls.Add(*req1, *req2, *req3)
 	return ls.String()
 }
+

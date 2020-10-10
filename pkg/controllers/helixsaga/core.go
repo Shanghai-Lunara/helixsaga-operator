@@ -5,6 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
 	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
@@ -12,15 +13,16 @@ import (
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
-func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) error {
-	ss, err := ks.StatefulSet().Get(hs.Namespace, spec.Name)
+func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec, wo *WatchOption) error {
+	var err error
+	wo.StatefulSet, err = ks.StatefulSet().Get(hs.Namespace, spec.Name)
 	if err != nil {
 		klog.Info("statefulSet err:", err)
 		if !errors.IsNotFound(err) {
 			return err
 		}
 		klog.Info("new statefulSet")
-		if ss, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
+		if wo.StatefulSet, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
 			return err
 		}
 		if len(spec.ServicePorts) > 0 {
@@ -31,9 +33,9 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 		}
 	}
 	klog.Info("rds:", *spec.Replicas)
-	klog.Info("statefulSet:", *ss.Spec.Replicas)
-	if spec.Replicas != nil && *spec.Replicas != *ss.Spec.Replicas || spec.Image != ss.Spec.Template.Spec.Containers[0].Image {
-		if ss, err = ks.StatefulSet().Update(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
+	klog.Info("statefulSet:", *wo.StatefulSet.Spec.Replicas)
+	if spec.Replicas != nil && *spec.Replicas != *wo.StatefulSet.Spec.Replicas || spec.Image != wo.StatefulSet.Spec.Template.Spec.Containers[0].Image {
+		if wo.StatefulSet, err = ks.StatefulSet().Update(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
 			klog.V(2).Info(err)
 			return err
 		}
@@ -60,7 +62,7 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			}
 		}
 	}
-	if err = updateStatus(hs, client, ss, spec.Name); err != nil {
+	if err = updateStatus(hs, client, wo.StatefulSet, spec.Name); err != nil {
 		return err
 	}
 	return nil
@@ -107,18 +109,19 @@ func DeleteStatefulSetAndService(ks k8sCoreV1.KubernetesResource, namespace stri
 	return nil
 }
 
-func PatchStatefulSet(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) error {
-	ss := GetStatefulSetImagePatch(hs, spec)
+func PatchStatefulSet(ki kubernetes.Interface, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, specName, image string) error {
+	ss := GetStatefulSetImagePatch(hs, specName, image)
 	data, err := json.Marshal(*ss)
 	if err != nil {
 		klog.V(2).Info(err)
 	}
-	ss, err = ks.StatefulSet().Patch(hs.Namespace, hs.Name, types.MergePatchType, data)
+	klog.Info("PatchStatefulSet ss:", string(data))
+	ss, err = ki.AppsV1().StatefulSets(hs.Namespace).Patch(hs.Name, types.MergePatchType, data)
 	if err != nil {
 		klog.V(2).Info(err)
 		return err
 	}
-	if err = updateStatus(hs, client, ss, spec.Name); err != nil {
+	if err = updateStatus(hs, client, ss, specName); err != nil {
 		return err
 	}
 	return nil

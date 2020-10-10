@@ -3,11 +3,16 @@ package helixsaga
 import (
 	"context"
 	"fmt"
+	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
+	helixSagaClientSet "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 	"strings"
 	"sync"
 	"time"
 
 	harbor "github.com/nevercase/harbor-api"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog"
 )
@@ -40,6 +45,8 @@ func (ws *Watchers) Subscribe(wo *WatchOption) error {
 		}
 		ws.items[name] = w
 	}
+	// update WatchOption
+	ws.items[name].opt = wo
 	return nil
 }
 
@@ -73,14 +80,16 @@ func NewWatcher(ctx context.Context, hi harbor.HubInterface, wo *WatchOption) (*
 		return nil, err
 	}
 	subCtx, cancel := context.WithCancel(ctx)
-	return &Watcher{
+	w := &Watcher{
 		harborHub:   hi,
 		name:        wo.Name(),
 		opt:         wo,
 		watchResult: wi,
 		ctx:         subCtx,
 		cancel:      cancel,
-	}, nil
+	}
+	go w.Loop()
+	return w, nil
 }
 
 func (w *Watcher) Loop() {
@@ -92,11 +101,14 @@ func (w *Watcher) Loop() {
 		case msg, isClose := <-w.watchResult.ResultChan():
 			klog.Info("Watcher Loop msg:", msg)
 			if !isClose {
-				// todo reWatch
+				// reWatch
 				tick := time.NewTicker(time.Millisecond * 200)
 				for {
 					select {
+					case <-w.ctx.Done():
+						return
 					case <-tick.C:
+						klog.V(2).Infof("Watcher ResultChan reconnect name:%s", w.name)
 						wi, err := WatchHarborImage(w.harborHub, w.opt)
 						if err != nil {
 							klog.V(2).Info(err)
@@ -107,9 +119,24 @@ func (w *Watcher) Loop() {
 					}
 				}
 			}
-			harborWatch := msg.Object.(*harbor.Option)
-			// todo handle the message which was received from the watch channel
-			_ = harborWatch
+			t := msg.Object.(harbor.Option)
+			// handle the message which was received from the watch channel
+			image, err := w.opt.GetPodImage()
+			if err != nil {
+				klog.V(2).Info(err)
+				// todo handle error
+				continue
+			}
+			hash := harbor.GetHashFromDockerImageId(image)
+			if hash == "" {
+				klog.V(2).Infof("image:%s hash:%s", image, hash)
+				continue
+			}
+			if hash != t.Sha256 {
+				if err := PatchStatefulSet(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga, w.opt.SpecName, w.opt.Image); err != nil {
+					klog.V(2).Info(err)
+				}
+			}
 		}
 	}
 }
@@ -117,6 +144,7 @@ func (w *Watcher) Loop() {
 func (w *Watcher) Close() {
 	w.once.Do(func() {
 		w.cancel()
+		w.opt.Close()
 	})
 }
 
@@ -127,6 +155,14 @@ type WatchOption struct {
 	Image        string
 	ImageID      string
 	ImageInfo    *ImageInfo
+
+	K8sClientSet    kubernetes.Interface
+	HelixSagaClient helixSagaClientSet.Interface
+	StatefulSet     *appsv1.StatefulSet
+	HelixSaga       *helixsagav1.HelixSaga
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type ImageInfo struct {
@@ -136,12 +172,73 @@ type ImageInfo struct {
 	Tag        string
 }
 
-func (wo *WatchOption) Convert() {
-	wo.ImageInfo = ConvertImageToObject(wo.Image)
+func NewWatchOption(ctx context.Context, ki kubernetes.Interface, helixSagaClient helixSagaClientSet.Interface, hs *helixsagav1.HelixSaga, specName, image string) *WatchOption {
+	sub, cancel := context.WithCancel(ctx)
+	wo := &WatchOption{
+		Namespace:       hs.Namespace,
+		OperatorName:    hs.Name,
+		SpecName:        specName,
+		Image:           image,
+		ImageInfo:       ConvertImageToObject(image),
+		K8sClientSet:    ki,
+		HelixSagaClient: helixSagaClient,
+		HelixSaga:       hs,
+		ctx:             sub,
+		cancel:          cancel,
+	}
+	return wo
 }
 
 func (wo *WatchOption) Name() string {
 	return fmt.Sprintf("%s-%s-%s-%s", wo.Namespace, wo.OperatorName, wo.SpecName, wo.Image)
+}
+
+func (wo *WatchOption) GetPodImage() (string, error) {
+	tick := time.NewTicker(time.Millisecond * 500)
+	defer tick.Stop()
+	for {
+		select {
+		case <-tick.C:
+			pl, err := ListPodByLabels(wo.K8sClientSet, wo.Namespace, wo.OperatorName, wo.SpecName)
+			if err != nil {
+				klog.V(2).Infof("WatchOption GetPodImage ListPodByLabels err:%v", err)
+				continue
+			}
+			var hash string
+			for _, v := range pl.Items {
+				if v.Status.Phase != corev1.PodRunning {
+					klog.Infof("Pod name:%s Status.Phase:%s", v.Name, v.Status.Phase)
+					continue
+				}
+				if len(v.Status.ContainerStatuses) == 0 {
+					klog.Infof("Pod name:%s ContainerStatuses was empty", v.Name)
+					continue
+				}
+				if v.Status.ContainerStatuses[0].Image != wo.Image {
+					klog.Infof("Pod name:%s image:%s was not match the WatchOption image:%s", v.Name, v.Status.ContainerStatuses[0].Image, wo.Image)
+					continue
+				}
+				if v.Status.ContainerStatuses[0].ImageID == "" {
+					klog.Infof("Pod name:%s ContainerStatuses Container:%s image:%s ImageID was empty",
+						v.Name, v.Status.ContainerStatuses[0].Name, v.Status.ContainerStatuses[0].Image)
+					continue
+				}
+				hash = v.Status.ContainerStatuses[0].ImageID
+				break
+			}
+			if hash == "" {
+				klog.Infof("WatchOption GetPodImage HelixSaga Nmae")
+				continue
+			}
+			return hash, nil
+		case <-wo.ctx.Done():
+			return "", fmt.Errorf("WatchOption GetPodImage ctx cancel")
+		}
+	}
+}
+
+func (wo *WatchOption) Close() {
+	wo.cancel()
 }
 
 // ConvertImageToObject returns the ImageInfo with an image string
