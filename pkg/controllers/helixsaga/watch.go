@@ -3,17 +3,17 @@ package helixsaga
 import (
 	"context"
 	"fmt"
-	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
-	helixSagaClientSet "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 	"strings"
 	"sync"
 	"time"
 
+	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
+	helixSagaClientSet "github.com/Shanghai-Lunara/helixsaga-operator/pkg/generated/helixsaga/clientset/versioned"
 	harbor "github.com/nevercase/harbor-api"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 )
 
@@ -256,7 +256,7 @@ func ConvertImageToObject(image string) *ImageInfo {
 }
 
 func WatchHarborImage(hi harbor.HubInterface, wo *WatchOption) (watch.Interface, error) {
-	hb, err := hi.Get(wo.ImageInfo.Domain)
+	hb, err := hi.Get(fmt.Sprintf("%s/%s", harbor.HttpPrefix, wo.ImageInfo.Domain))
 	if err != nil {
 		klog.V(2).Info(err)
 		return nil, err
