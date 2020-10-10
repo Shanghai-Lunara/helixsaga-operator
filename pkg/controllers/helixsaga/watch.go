@@ -256,7 +256,7 @@ func ConvertImageToObject(image string) *ImageInfo {
 }
 
 func WatchHarborImage(hi harbor.HubInterface, wo *WatchOption) (watch.Interface, error) {
-	hb, err := hi.Get(fmt.Sprintf("%s/%s", harbor.HttpPrefix, wo.ImageInfo.Domain))
+	hb, err := hi.Get(fmt.Sprintf("%s%s", harbor.HttpPrefix, wo.ImageInfo.Domain))
 	if err != nil {
 		klog.V(2).Info(err)
 		return nil, err
