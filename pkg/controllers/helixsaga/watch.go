@@ -261,6 +261,10 @@ func WatchHarborImage(hi harbor.HubInterface, wo *WatchOption) (watch.Interface,
 		klog.V(2).Info(err)
 		return nil, err
 	}
+	if err := hb.Login(); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
 	opt := harbor.Option{
 		APIVersion: "v1",
 		Kind:       "",
