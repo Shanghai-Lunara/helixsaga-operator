@@ -4,7 +4,6 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
@@ -110,13 +109,13 @@ func DeleteStatefulSetAndService(ks k8sCoreV1.KubernetesResource, namespace stri
 }
 
 func PatchStatefulSet(ki kubernetes.Interface, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, specName, image string) error {
-	ss := GetStatefulSetImagePatch(hs, specName, image)
-	data, err := json.Marshal(*ss)
+	data, err := GetStatefulSetImagePatch(hs, specName, image)
 	if err != nil {
 		klog.V(2).Info(err)
+		return err
 	}
 	klog.Info("PatchStatefulSet ss:", string(data))
-	ss, err = ki.AppsV1().StatefulSets(hs.Namespace).Patch(hs.Name, types.MergePatchType, data)
+	ss, err := ki.AppsV1().StatefulSets(hs.Namespace).Patch(specName, types.MergePatchType, data)
 	if err != nil {
 		klog.V(2).Info(err)
 		return err
