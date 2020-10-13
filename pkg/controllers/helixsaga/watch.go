@@ -21,6 +21,7 @@ import (
 type Watchers struct {
 	mu        sync.Mutex
 	items     map[string]*Watcher
+	lockers   map[string]sync.Mutex
 	harborHub harbor.HubInterface
 }
 
@@ -29,6 +30,7 @@ func NewWatchers(c []harbor.Config) *Watchers {
 	return &Watchers{
 		items:     make(map[string]*Watcher, 0),
 		harborHub: harbor.NewHub(c),
+		lockers:   make(map[string]sync.Mutex, 0),
 	}
 }
 
@@ -44,9 +46,10 @@ func (ws *Watchers) Subscribe(wo *WatchOption) error {
 			return err
 		}
 		ws.items[name] = w
+		go ws.Loop(w)
 	}
 	// update WatchOption
-	ws.items[name].opt = wo
+	//ws.items[name].opt = wo
 	return nil
 }
 
@@ -59,6 +62,17 @@ func (ws *Watchers) UnSubscribe(wo *WatchOption) {
 		t.Close()
 	}
 	delete(ws.items, name)
+}
+
+func (ws *Watchers) Locker(crdName string) sync.Mutex {
+	ws.mu.Lock()
+	defer ws.mu.Unlock()
+	t, ok := ws.lockers[crdName]
+	if !ok {
+		t = sync.Mutex{}
+		ws.lockers[crdName] = t
+	}
+	return t
 }
 
 type Watcher struct {
@@ -88,11 +102,10 @@ func NewWatcher(ctx context.Context, hi harbor.HubInterface, wo *WatchOption) (*
 		ctx:         subCtx,
 		cancel:      cancel,
 	}
-	go w.Loop()
 	return w, nil
 }
 
-func (w *Watcher) Loop() {
+func (ws *Watchers) Loop(w *Watcher) {
 	defer w.watchResult.Stop()
 	for {
 		select {
@@ -139,15 +152,22 @@ func (w *Watcher) Loop() {
 				//if err := PatchPod(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName); err != nil {
 				//	klog.V(2).Info(err)
 				//}
+				klog.Infof("HelixSaga:%s get the locker", w.opt.HelixSaga.Name)
+				t := ws.Locker(w.opt.HelixSaga.Name)
+				klog.Infof("HelixSaga:%s start locking", w.opt.HelixSaga.Name)
+				t.Lock()
 				var replica int32
 				if replica, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, 0); err != nil {
 					klog.V(2).Info(err)
+					t.Unlock()
 					continue
 				}
 				if _, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, replica); err != nil {
 					klog.V(2).Info(err)
+					t.Unlock()
 					continue
 				}
+				t.Unlock()
 			}
 		}
 	}
@@ -161,6 +181,8 @@ func (w *Watcher) Close() {
 }
 
 type WatchOption struct {
+	mu sync.Mutex
+
 	Namespace    string
 	OperatorName string
 	SpecName     string
@@ -184,12 +206,11 @@ type ImageInfo struct {
 	Tag        string
 }
 
-func NewWatchOption(ctx context.Context, ki kubernetes.Interface, helixSagaClient helixSagaClientSet.Interface, hs *helixsagav1.HelixSaga, specName, image string) *WatchOption {
+func NewWatchOption(ctx context.Context, ki kubernetes.Interface, helixSagaClient helixSagaClientSet.Interface, hs *helixsagav1.HelixSaga, image string) *WatchOption {
 	sub, cancel := context.WithCancel(ctx)
 	wo := &WatchOption{
 		Namespace:       hs.Namespace,
 		OperatorName:    hs.Name,
-		SpecName:        specName,
 		Image:           image,
 		ImageInfo:       ConvertImageToObject(image),
 		K8sClientSet:    ki,
@@ -202,7 +223,7 @@ func NewWatchOption(ctx context.Context, ki kubernetes.Interface, helixSagaClien
 }
 
 func (wo *WatchOption) Name() string {
-	return fmt.Sprintf("%s-%s-%s-%s", wo.Namespace, wo.OperatorName, wo.SpecName, wo.Image)
+	return fmt.Sprintf("%s-%s-%s", wo.Namespace, wo.OperatorName, wo.Image)
 }
 
 func (wo *WatchOption) GetPodImage() (string, error) {
@@ -211,7 +232,7 @@ func (wo *WatchOption) GetPodImage() (string, error) {
 	for {
 		select {
 		case <-tick.C:
-			pl, err := ListPodByLabels(wo.K8sClientSet, wo.Namespace, wo.OperatorName, wo.SpecName)
+			pl, err := ListPodByLabels(wo.K8sClientSet, wo.Namespace, wo.OperatorName, "")
 			if err != nil {
 				klog.V(2).Infof("WatchOption GetPodImage ListPodByLabels err:%v", err)
 				continue

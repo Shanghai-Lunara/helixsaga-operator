@@ -28,20 +28,26 @@ func ListPodByLabels(ki kubernetes.Interface, namespace, controllerName, specNam
 
 // GetLabelSelector returns the LabelSelector of the metav1.ListOptions
 func GetLabelSelector(controllerName string, specName string) string {
+	ls := labels.NewSelector()
 	req1, err := labels.NewRequirement(k8sCoreV1.LabelApp, selection.Equals, []string{OperatorKindName})
 	if err != nil {
 		klog.Fatal(err)
 	}
-	req2, err := labels.NewRequirement(k8sCoreV1.LabelController, selection.Equals, []string{controllerName})
-	if err != nil {
-		klog.Fatal(err)
+	ls = ls.Add(*req1)
+	if controllerName != "" {
+		req2, err := labels.NewRequirement(k8sCoreV1.LabelController, selection.Equals, []string{controllerName})
+		if err != nil {
+			klog.Fatal(err)
+		}
+		ls = ls.Add(*req2)
 	}
-	req3, err := labels.NewRequirement(k8sCoreV1.LabelName, selection.Equals, []string{specName})
-	if err != nil {
-		klog.Fatal(err)
+	if specName != "" {
+		req3, err := labels.NewRequirement(k8sCoreV1.LabelName, selection.Equals, []string{specName})
+		if err != nil {
+			klog.Fatal(err)
+		}
+		ls = ls.Add(*req3)
 	}
-	ls := labels.NewSelector()
-	ls = ls.Add(*req1, *req2, *req3)
 	return ls.String()
 }
 

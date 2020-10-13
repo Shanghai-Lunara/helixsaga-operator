@@ -153,7 +153,7 @@ func GetHelixSagaReplicasPatch(namespace, crdName, specName string, replicas int
 	return json.Marshal(patch)
 }
 
-func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, specName string, replicas int32) (int32, error) {
+func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, image string, replicas int32) (int32, error) {
 	var res int32
 	var defaultConfig = wait.Backoff{
 		Steps:    50,
@@ -164,13 +164,13 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 	err := retry.RetryOnConflict(defaultConfig, func() error {
 		if replicas > 0 {
 			// todo check the numbers of the pods
-			if pl, err := ListPodByLabels(ki, namespace, crdName, specName); err != nil {
+			if pl, err := ListPodByLabels(ki, namespace, crdName, ""); err != nil {
 				klog.V(2).Info(err)
 				return err
 			} else {
-				klog.Infof("namespace:%s crdName:%s specName:%s pods-numbers:%d", namespace, crdName, specName, len(pl.Items))
+				klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
 				if len(pl.Items) > 0 {
-					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, specName)
+					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
 					klog.V(2).Info(err)
 					return err
 				}
@@ -184,17 +184,19 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		exist := false
 		apps := make([]helixSagaV1.HelixSagaApp, 0)
 		for _, v := range hs.Spec.Applications {
-			if v.Spec.Name != specName {
-				continue
+			if v.Spec.Image == image {
+				a := replicas
+				v.Spec.Replicas = &a
+				exist = true
+				klog.Info("Patch change crd-name:%s image:%s specName:%s", crdName, image, v.Spec.Name)
 			}
-			v.Spec.Replicas = &replicas
 			apps = append(apps, v)
-			exist = true
 		}
 		hs.Spec.Applications = apps
 		if !exist {
-			err = fmt.Errorf("error: the crd-name:%s app-name:%s was not found", crdName, specName)
+			err = fmt.Errorf("error: the crd-name:%s image:%s was not found", crdName, image)
 			klog.V(2).Info(err)
+			defaultConfig.Steps = 0
 			return err
 		}
 		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Update(hs); err != nil {
@@ -214,8 +216,8 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		return nil
 	})
 	if errors.IsConflict(err) {
-		err = fmt.Errorf("RetryUpdateHelixSaga UpdateMaxRetries(%d) has reached. The RetryUpdateHelixSaga will retry later for owner namespace:%s crdName:%s specName:%s",
-			defaultConfig.Steps, namespace, crdName, specName)
+		err = fmt.Errorf("RetryUpdateHelixSaga UpdateMaxRetries(%d) has reached. The RetryUpdateHelixSaga will retry later for owner namespace:%s crdName:%s image:%s",
+			defaultConfig.Steps, namespace, crdName, image)
 		klog.V(2).Info(err)
 	}
 	return res, err

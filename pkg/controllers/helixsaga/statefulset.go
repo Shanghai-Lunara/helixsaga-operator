@@ -105,7 +105,7 @@ func GetStatefulSetImagePatch(hs *helixSagaV1.HelixSaga, specName, image string)
 
 const (
 	ErrorStatefulSetWasNotReady = "spec-Replicas:%d status-Replicas:%d status-ReadyReplicas:%d error: statefulSet was not ready for auto-updating"
-	ErrorPodsHadNotBeenClosed   = "namespace:%s crdName:%s specName:%s error: pods hadn't been closed completed"
+	ErrorPodsHadNotBeenClosed   = "namespace:%s crdName:%s image:%s error: pods hadn't been closed completed"
 )
 
 func UpdateStatefulSetReplicas(ki kubernetes.Interface, namespace, controllerName, specName string, r int32) (int32, error) {

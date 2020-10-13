@@ -3,6 +3,7 @@ package helixsaga
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -84,6 +85,7 @@ func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}, 
 }
 
 type controller struct {
+	mu       sync.Mutex
 	watchers *Watchers
 }
 
@@ -114,8 +116,14 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 			return err
 		} else {
 			names := make(map[string]bool, len(hs.Spec.Applications))
+			images := make(map[string]int, 0)
 			for _, v := range hs.Spec.Applications {
 				names[v.Spec.Name] = true
+				if _, ok := images[v.Spec.Name]; ok {
+					images[v.Spec.Name] += 1
+				} else {
+					images[v.Spec.Name] = 1
+				}
 			}
 			for _, v := range old.Spec.Applications {
 				if _, ok := names[v.Spec.Name]; !ok {
@@ -123,10 +131,12 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 					wo := &WatchOption{
 						Namespace:    hs.Namespace,
 						OperatorName: hs.Name,
-						SpecName:     v.Spec.Name,
 						Image:        v.Spec.Image,
 					}
-					c.watchers.UnSubscribe(wo)
+					if _, ok := images[v.Spec.Image]; !ok {
+						klog.Infof("HelixSaga crdName:%s image:%s has been removed", hs.Name, v.Spec.Image)
+						c.watchers.UnSubscribe(wo)
+					}
 					klog.Info("remove app-name:", v.Spec.Name)
 					if err := DeleteStatefulSetAndService(ks, hs.Namespace, v.Spec.Name); err != nil {
 						klog.V(2).Info(err)
@@ -138,7 +148,7 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 	}
 	for _, v := range hs.Spec.Applications {
 		// starting watching the harbor before creating apps
-		wo := NewWatchOption(context.Background(), ks.ClientSet(), clientSet, hs, v.Spec.Name, v.Spec.Image)
+		wo := NewWatchOption(context.Background(), ks.ClientSet(), clientSet, hs, v.Spec.Image)
 		if err := c.watchers.Subscribe(wo); err != nil {
 			klog.V(2).Info(err)
 			return err
