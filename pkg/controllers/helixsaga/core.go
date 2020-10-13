@@ -162,23 +162,6 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
-		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
-		if err != nil {
-			klog.V(2).Info(err)
-			return err
-		}
-		exist := false
-		for _, v := range hs.Spec.Applications {
-			if v.Spec.Name != specName {
-				continue
-			}
-			exist = true
-		}
-		if !exist {
-			err = fmt.Errorf("error: the crd-name:%s app-name:%s was not found", crdName, specName)
-			klog.V(2).Info(err)
-			return err
-		}
 		if replicas > 0 {
 			// todo check the numbers of the pods
 			if pl, err := ListPodByLabels(ki, namespace, crdName, specName); err != nil {
@@ -193,16 +176,41 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 				}
 			}
 		}
-		data, err := GetHelixSagaReplicasPatch(namespace, crdName, specName, replicas)
+		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
 		if err != nil {
 			klog.V(2).Info(err)
 			return err
 		}
-		klog.Info("Patch data:", string(data))
-		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Patch(crdName, types.MergePatchType, data); err != nil {
+		exist := false
+		apps := make([]helixSagaV1.HelixSagaApp, 0)
+		for _, v := range hs.Spec.Applications {
+			if v.Spec.Name != specName {
+				continue
+			}
+			v.Spec.Replicas = &replicas
+			apps = append(apps, v)
+			exist = true
+		}
+		hs.Spec.Applications = apps
+		if !exist {
+			err = fmt.Errorf("error: the crd-name:%s app-name:%s was not found", crdName, specName)
 			klog.V(2).Info(err)
 			return err
 		}
+		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Update(hs); err != nil {
+			klog.V(2).Info(err)
+			return err
+		}
+		//data, err := GetHelixSagaReplicasPatch(namespace, crdName, specName, replicas)
+		//if err != nil {
+		//	klog.V(2).Info(err)
+		//	return err
+		//}
+		//klog.Info("Patch data:", string(data))
+		//if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Patch(crdName, types.MergePatchType, data); err != nil {
+		//	klog.V(2).Info(err)
+		//	return err
+		//}
 		return nil
 	})
 	if errors.IsConflict(err) {
