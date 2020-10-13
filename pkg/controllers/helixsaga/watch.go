@@ -157,12 +157,12 @@ func (ws *Watchers) Loop(w *Watcher) {
 				klog.Infof("HelixSaga:%s start locking", w.opt.HelixSaga.Name)
 				t.Lock()
 				var replica int32
-				if replica, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, 0); err != nil {
+				if replica, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.Image, 0); err != nil {
 					klog.V(2).Info(err)
 					t.Unlock()
 					continue
 				}
-				if _, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, replica); err != nil {
+				if _, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.Image, replica); err != nil {
 					klog.V(2).Info(err)
 					t.Unlock()
 					continue
