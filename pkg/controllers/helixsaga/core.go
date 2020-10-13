@@ -1,10 +1,17 @@
 package helixsaga
 
 import (
+	"fmt"
+	"time"
+
 	appsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/klog"
 
 	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
@@ -124,4 +131,84 @@ func PatchStatefulSet(ki kubernetes.Interface, client helixSagaClientSet.Interfa
 		return err
 	}
 	return nil
+}
+
+func GetHelixSagaReplicasPatch(namespace, crdName, specName string, replicas int32) ([]byte, error) {
+	patch := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"name":      crdName,
+			"namespace": namespace,
+		},
+		"spec": map[string]interface{}{
+			"applications": map[string]interface{}{
+				"spec": []map[string]interface{}{
+					{
+						"name":     specName,
+						"replicas": replicas,
+					},
+				},
+			},
+		},
+	}
+	return json.Marshal(patch)
+}
+
+func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, specName string, replicas int32) (int32, error) {
+	var res int32
+	var defaultConfig = wait.Backoff{
+		Steps:    50,
+		Duration: 1 * time.Second,
+		Factor:   1.0,
+		Jitter:   0.1,
+	}
+	err := retry.RetryOnConflict(defaultConfig, func() error {
+		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
+		if err != nil {
+			klog.V(2).Info(err)
+			return err
+		}
+		exist := false
+		for _, v := range hs.Spec.Applications {
+			if v.Spec.Name != specName {
+				continue
+			}
+			exist = true
+		}
+		if !exist {
+			err = fmt.Errorf("error: the crd-name:%s app-name:%s was not found", crdName, specName)
+			klog.V(2).Info(err)
+			return err
+		}
+		if replicas > 0 {
+			// todo check the numbers of the pods
+			if pl, err := ListPodByLabels(ki, namespace, crdName, specName); err != nil {
+				klog.V(2).Info(err)
+				return err
+			} else {
+				klog.Infof("namespace:%s crdName:%s specName:%s pods-numbers:%d", namespace, crdName, specName, len(pl.Items))
+				if len(pl.Items) > 0 {
+					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, specName)
+					klog.V(2).Info(err)
+					return err
+				}
+			}
+		}
+		data, err := GetHelixSagaReplicasPatch(namespace, crdName, specName, replicas)
+		if err != nil {
+			klog.V(2).Info(err)
+			return err
+		}
+		klog.Info("Patch data:", string(data))
+		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Patch(crdName, types.MergePatchType, data); err != nil {
+			klog.V(2).Info(err)
+			return err
+		}
+		return nil
+	})
+	if errors.IsConflict(err) {
+		err = fmt.Errorf("RetryUpdateHelixSaga UpdateMaxRetries(%d) has reached. The RetryUpdateHelixSaga will retry later for owner namespace:%s crdName:%s specName:%s",
+			defaultConfig.Steps, namespace, crdName, specName)
+		klog.V(2).Info(err)
+	}
+	return res, err
 }

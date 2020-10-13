@@ -140,11 +140,11 @@ func (w *Watcher) Loop() {
 				//	klog.V(2).Info(err)
 				//}
 				var replica int32
-				if replica, err = UpdateStatefulSetReplicas(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, 0); err != nil {
+				if replica, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, 0); err != nil {
 					klog.V(2).Info(err)
 					continue
 				}
-				if _, err = UpdateStatefulSetReplicas(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, replica); err != nil {
+				if _, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName, replica); err != nil {
 					klog.V(2).Info(err)
 					continue
 				}
