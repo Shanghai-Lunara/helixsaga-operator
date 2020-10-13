@@ -1,16 +1,14 @@
 package helixsaga
 
 import (
-	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"sync"
 
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
@@ -20,11 +18,11 @@ import (
 func ListPodByLabels(ki kubernetes.Interface, namespace, controllerName, specName string) (*corev1.PodList, error) {
 	timeout := int64(10)
 	opts := metav1.ListOptions{
-		LabelSelector:  GetLabelSelector(controllerName, specName),
-		FieldSelector:  fields.OneTermEqualSelector("status.phase", string(corev1.PodRunning)).String(),
+		LabelSelector: GetLabelSelector(controllerName, specName),
+		//FieldSelector:  fields.OneTermEqualSelector("status.phase", string(corev1.PodRunning)).String(),
 		TimeoutSeconds: &timeout,
 	}
-	fmt.Println(fields.OneTermEqualSelector("status.phase", string(corev1.PodRunning)).String())
+	//fmt.Println(fields.OneTermEqualSelector("status.phase", string(corev1.PodRunning)).String())
 	return ki.CoreV1().Pods(namespace).List(opts)
 }
 

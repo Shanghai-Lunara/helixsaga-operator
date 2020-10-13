@@ -103,8 +103,14 @@ func GetStatefulSetImagePatch(hs *helixSagaV1.HelixSaga, specName, image string)
 	return json.Marshal(patch)
 }
 
-func UpdateStatefulSetReplicas(ki kubernetes.Interface, namespace, specName string, r int32) (int32, error) {
-	klog.Infof("UpdateStatefulSetReplicas namespace:%s specName:%s replicas:%d", namespace, specName, r)
+const (
+	ErrorStatefulSetWasNotReady = "spec-Replicas:%d status-Replicas:%d status-ReadyReplicas:%d error: statefulSet was not ready for auto-updating"
+	ErrorPodsHadNotBeenClosed   = "namespace:%s controllerName:%s specName:%s error: pods hadn't been closed completed"
+)
+
+func UpdateStatefulSetReplicas(ki kubernetes.Interface, namespace, controllerName, specName string, r int32) (int32, error) {
+	klog.Infof("UpdateStatefulSetReplicas namespace:%s controllerName:%s specName:%s replicas:%d",
+		namespace, controllerName, specName, r)
 	var res int32
 	var defaultConfig = wait.Backoff{
 		Steps:    50,
@@ -119,15 +125,26 @@ func UpdateStatefulSetReplicas(ki kubernetes.Interface, namespace, specName stri
 			return err
 		}
 		if *ss.Spec.Replicas != ss.Status.Replicas || ss.Status.Replicas != ss.Status.ReadyReplicas {
-			err = fmt.Errorf("StatefulSet status was not ready for auto-updating: Spec-Replicas:%d Status-Replicas:%d Status-ReadyReplicas:%d",
-				*ss.Spec.Replicas, ss.Status.Replicas, ss.Status.ReadyReplicas)
+			err = fmt.Errorf(ErrorStatefulSetWasNotReady, *ss.Spec.Replicas, ss.Status.Replicas, ss.Status.ReadyReplicas)
 			klog.V(2).Info(err)
 			return err
 		}
+		if r > 0 {
+			if pl, err := ListPodByLabels(ki, namespace, controllerName, specName); err != nil {
+				klog.V(2).Info(err)
+				return err
+			} else {
+				klog.Infof("namespace:%s controllerName:%s specName:%s pods-numbers:%d", namespace, controllerName, specName, len(pl.Items))
+				if len(pl.Items) > 0 {
+					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, controllerName, specName)
+					klog.V(2).Info(err)
+					return err
+				}
+			}
+		}
 		res = *ss.Spec.Replicas
 		ss.Spec.Replicas = &r
-		ss, err = ki.AppsV1().StatefulSets(namespace).Update(ss)
-		if err != nil {
+		if ss, err = ki.AppsV1().StatefulSets(namespace).Update(ss); err != nil {
 			klog.V(2).Info(err)
 			return err
 		}
