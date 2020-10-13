@@ -82,6 +82,7 @@ var fakePodList = []runtime.Object{
 					ImageID: fakeImageID,
 				},
 			},
+			Phase: corev1.PodPending,
 		},
 	},
 	&corev1.Pod{
@@ -110,6 +111,7 @@ var fakePodList = []runtime.Object{
 					ImageID: fakeImageID,
 				},
 			},
+			Phase: corev1.PodReasonUnschedulable,
 		},
 	},
 	&corev1.Pod{

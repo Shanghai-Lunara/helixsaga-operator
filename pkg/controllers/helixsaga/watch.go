@@ -133,8 +133,20 @@ func (w *Watcher) Loop() {
 				continue
 			}
 			if hash != t.Sha256 {
-				if err := PatchStatefulSet(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga, w.opt.SpecName, w.opt.Image); err != nil {
+				//if err := PatchStatefulSet(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga, w.opt.SpecName, w.opt.Image); err != nil {
+				//	klog.V(2).Info(err)
+				//}
+				//if err := PatchPod(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName); err != nil {
+				//	klog.V(2).Info(err)
+				//}
+				var replica int32
+				if replica, err = UpdateStatefulSetReplicas(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.SpecName, 0); err != nil {
 					klog.V(2).Info(err)
+					continue
+				}
+				if _, err = UpdateStatefulSetReplicas(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.SpecName, replica); err != nil {
+					klog.V(2).Info(err)
+					continue
 				}
 			}
 		}
@@ -227,7 +239,7 @@ func (wo *WatchOption) GetPodImage() (string, error) {
 				break
 			}
 			if hash == "" {
-				klog.Infof("WatchOption GetPodImage HelixSaga Nmae")
+				klog.Infof("WatchOption GetPodImage HelixSaga Name")
 				continue
 			}
 			return hash, nil
