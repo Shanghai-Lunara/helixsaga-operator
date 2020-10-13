@@ -153,8 +153,8 @@ func GetHelixSagaReplicasPatch(namespace, crdName, specName string, replicas int
 	return json.Marshal(patch)
 }
 
-func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, image string, replicas int32) (int32, error) {
-	var res int32
+func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, image string, replicas map[string]int32) (map[string]int32, error) {
+	var res = make(map[string]int32, 0)
 	var defaultConfig = wait.Backoff{
 		Steps:    50,
 		Duration: 1 * time.Second,
@@ -162,7 +162,7 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
-		if replicas > 0 {
+		if len(replicas) > 0 {
 			// todo check the numbers of the pods
 			if pl, err := ListPodByLabels(ki, namespace, crdName, ""); err != nil {
 				klog.V(2).Info(err)
@@ -185,7 +185,11 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		apps := make([]helixSagaV1.HelixSagaApp, 0)
 		for _, v := range hs.Spec.Applications {
 			if v.Spec.Image == image {
-				a := replicas
+				res[v.Spec.Name] = *v.Spec.Replicas
+				var a int32
+				if t, ok := replicas[v.Spec.Name]; ok {
+					a = t
+				}
 				v.Spec.Replicas = &a
 				exist = true
 				klog.Info("Patch change crd-name:%s image:%s specName:%s", crdName, image, v.Spec.Name)
