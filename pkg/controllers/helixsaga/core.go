@@ -7,6 +7,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -156,51 +157,51 @@ func GetHelixSagaReplicasPatch(namespace, crdName, specName string, replicas int
 func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, image string, replicas map[string]int32) (map[string]int32, error) {
 	var res = make(map[string]int32, 0)
 	var defaultConfig = wait.Backoff{
-		Steps:    50,
-		Duration: 1 * time.Second,
+		Steps:    10000,
+		Duration: 200 * time.Millisecond,
 		Factor:   1.0,
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
-		if len(replicas) > 0 {
-			// todo check the numbers of the pods
-			if pl, err := ListPodByLabels(ki, namespace, crdName, ""); err != nil {
-				klog.V(2).Info(err)
-				return err
-			} else {
-				klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
-				if len(pl.Items) > 0 {
-					for _, v := range pl.Items {
-						if len(v.Spec.Containers) > 0 {
-							if v.Spec.Containers[0].Image == image {
-								klog.Infof("check namespace:%s crdName:%s image:%s container-name:%d", namespace, crdName, image, v.Spec.Containers[0].Name)
-								err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
-								klog.V(2).Info(err)
-								return err
-							}
-						}
-					}
-				}
-			}
-		}
 		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
 		if err != nil {
 			klog.V(2).Info(err)
-			return err
+			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
 		}
 		exist := false
+		hasErr := false
 		apps := make([]helixSagaV1.HelixSagaApp, 0)
 		for _, v := range hs.Spec.Applications {
 			if v.Spec.Image == image {
 				var a int32
 				if t, ok := replicas[v.Spec.Name]; ok {
+					if t != *v.Spec.Replicas {
+						if pl, err := ListPodByLabels(ki, namespace, crdName, v.Spec.Name); err != nil {
+							klog.V(2).Info(err)
+							hasErr = true
+						} else {
+							klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
+							if len(pl.Items) > 0 {
+								for _, v := range pl.Items {
+									if len(v.Spec.Containers) > 0 {
+										if v.Spec.Containers[0].Image == image {
+											klog.Infof("check namespace:%s crdName:%s image:%s container-name:%s", namespace, crdName, image, v.Spec.Containers[0].Name)
+											err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
+											klog.V(2).Info(err)
+											hasErr = true
+										}
+									}
+								}
+							}
+						}
+					}
 					a = t
 				} else {
 					res[v.Spec.Name] = *v.Spec.Replicas
 				}
 				v.Spec.Replicas = &a
 				exist = true
-				klog.Info("Patch change crd-name:%s image:%s specName:%s", crdName, image, v.Spec.Name)
+				klog.Infof("Patch change crd-name:%s image:%s specName:%s", crdName, image, v.Spec.Name)
 			}
 			apps = append(apps, v)
 		}
@@ -213,18 +214,11 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		}
 		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Update(hs); err != nil {
 			klog.V(2).Info(err)
-			return err
+			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
 		}
-		//data, err := GetHelixSagaReplicasPatch(namespace, crdName, specName, replicas)
-		//if err != nil {
-		//	klog.V(2).Info(err)
-		//	return err
-		//}
-		//klog.Info("Patch data:", string(data))
-		//if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Patch(crdName, types.MergePatchType, data); err != nil {
-		//	klog.V(2).Info(err)
-		//	return err
-		//}
+		if hasErr {
+			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image))
+		}
 		return nil
 	})
 	if errors.IsConflict(err) {
