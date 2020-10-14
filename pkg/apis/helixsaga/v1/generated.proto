@@ -150,6 +150,11 @@ message HelixSagaAppSpec {
 
   // The path of the nas disk which was mounted on the machine
   optional string volumePath = 13;
+
+  // Watch policy for the present app.
+  // One of Auto, Manual.
+  // Default to Manual.
+  optional string watchPolicy = 14;
 }
 
 // HelixSagaAppStatus is the sub status for a HelixSaga resource
