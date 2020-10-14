@@ -175,9 +175,16 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 			} else {
 				klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
 				if len(pl.Items) > 0 {
-					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
-					klog.V(2).Info(err)
-					return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+					for _, v := range pl.Items {
+						if len(v.Spec.Containers) > 0 {
+							if v.Spec.Containers[0].Image == image {
+								klog.Infof("check namespace:%s crdName:%s image:%s container-name:%d", namespace, crdName, image, v.Spec.Containers[0].Name)
+								err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
+								klog.V(2).Info(err)
+								return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+							}
+						}
+					}
 				}
 			}
 		}
