@@ -127,6 +127,11 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
+		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
+		if err != nil {
+			klog.V(2).Info(err)
+			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+		}
 		if len(replicas) > 0 {
 			if pl, err := ListPodByLabels(ki, namespace, crdName, ""); err != nil {
 				klog.V(2).Info(err)
@@ -134,23 +139,26 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 			} else {
 				klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
 				if len(pl.Items) > 0 {
+					policyMap := make(map[string]helixSagaV1.WatchPolicy, 0)
+					for _, v := range hs.Spec.Applications {
+						policyMap[v.Spec.Name] = v.Spec.WatchPolicy
+					}
 					for _, v := range pl.Items {
 						if len(v.Spec.Containers) > 0 {
 							if v.Spec.Containers[0].Image == image {
-								klog.Infof("check namespace:%s crdName:%s image:%s container-name:%d", namespace, crdName, image, v.Spec.Containers[0].Name)
-								err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
-								klog.V(2).Info(err)
-								return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+								if policy, ok := policyMap[v.Spec.Containers[0].Name]; ok {
+									if policy == helixSagaV1.WatchPolicyAuto {
+										klog.Infof("check namespace:%s crdName:%s image:%s container-name:%d", namespace, crdName, image, v.Spec.Containers[0].Name)
+										err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
+										klog.V(2).Info(err)
+										return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+									}
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
-		if err != nil {
-			klog.V(2).Info(err)
-			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
 		}
 		exist := false
 		apps := make([]helixSagaV1.HelixSagaApp, 0)
