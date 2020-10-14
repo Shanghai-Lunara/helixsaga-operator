@@ -8,8 +8,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
@@ -116,44 +114,6 @@ func DeleteStatefulSetAndService(ks k8sCoreV1.KubernetesResource, namespace stri
 	return nil
 }
 
-func PatchStatefulSet(ki kubernetes.Interface, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, specName, image string) error {
-	data, err := GetStatefulSetImagePatch(hs, specName, image)
-	if err != nil {
-		klog.V(2).Info(err)
-		return err
-	}
-	klog.Info("PatchStatefulSet ss:", string(data))
-	ss, err := ki.AppsV1().StatefulSets(hs.Namespace).Patch(specName, types.MergePatchType, data)
-	if err != nil {
-		klog.V(2).Info(err)
-		return err
-	}
-	if err = updateStatus(hs, client, ss, specName); err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetHelixSagaReplicasPatch(namespace, crdName, specName string, replicas int32) ([]byte, error) {
-	patch := map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"name":      crdName,
-			"namespace": namespace,
-		},
-		"spec": map[string]interface{}{
-			"applications": map[string]interface{}{
-				"spec": []map[string]interface{}{
-					{
-						"name":     specName,
-						"replicas": replicas,
-					},
-				},
-			},
-		},
-	}
-	return json.Marshal(patch)
-}
-
 const (
 	ErrorPodsHadNotBeenClosed = "namespace:%s crdName:%s image:%s error: pods hadn't been closed completed"
 )
@@ -167,7 +127,6 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
-		klog.Info("retry.RetryOnConflict ++++ replicas")
 		if len(replicas) > 0 {
 			if pl, err := ListPodByLabels(ki, namespace, crdName, ""); err != nil {
 				klog.V(2).Info(err)
@@ -198,12 +157,14 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		for _, v := range hs.Spec.Applications {
 			if v.Spec.Image == image {
 				var a int32
-				if t, ok := replicas[v.Spec.Name]; ok {
-					a = t
-				} else {
-					res[v.Spec.Name] = *v.Spec.Replicas
+				if v.Spec.WatchPolicy == helixSagaV1.WatchPolicyAuto {
+					if t, ok := replicas[v.Spec.Name]; ok {
+						a = t
+					} else {
+						res[v.Spec.Name] = *v.Spec.Replicas
+					}
+					v.Spec.Replicas = &a
 				}
-				v.Spec.Replicas = &a
 				exist = true
 				klog.Infof("Patch change crd-name:%s image:%s specName:%s replicas:%d", crdName, image, v.Spec.Name, *v.Spec.Replicas)
 			}

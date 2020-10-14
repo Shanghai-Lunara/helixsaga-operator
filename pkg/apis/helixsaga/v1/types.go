@@ -43,6 +43,13 @@ type HelixSagaApp struct {
 	Status HelixSagaAppStatus `json:"status" protobuf:"bytes,2,rep,name=status"`
 }
 
+type WatchPolicy string
+
+const (
+	WatchPolicyAuto   WatchPolicy = "auto"
+	WatchPolicyManual WatchPolicy = "manual"
+)
+
 //HelixSagaAppSpec is the sub spec for a HelixSaga resource
 type HelixSagaAppSpec struct {
 	// Name of the container specified as a DNS_LABEL.
@@ -131,6 +138,10 @@ type HelixSagaAppSpec struct {
 	ServiceType corev1.ServiceType `json:"serviceType" protobuf:"bytes,12,rep,name=serviceType"`
 	// The path of the nas disk which was mounted on the machine
 	VolumePath string `json:"volumePath" protobuf:"bytes,13,rep,name=volumePath"`
+	// Watch policy for the present app.
+	// One of Auto, Manual.
+	// Default to Manual.
+	WatchPolicy WatchPolicy `json:"watchPolicy" protobuf:"bytes,14,rep,name=watchPolicy"`
 }
 
 //HelixSagaAppStatus is the sub status for a HelixSaga resource
