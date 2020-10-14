@@ -2,18 +2,13 @@ package helixsaga
 
 import (
 	"fmt"
+
 	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 	appsV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/retry"
-	"k8s.io/klog"
-	"time"
 )
 
 func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
@@ -101,60 +96,4 @@ func GetStatefulSetImagePatch(hs *helixSagaV1.HelixSaga, specName, image string)
 		},
 	}
 	return json.Marshal(patch)
-}
-
-const (
-	ErrorStatefulSetWasNotReady = "spec-Replicas:%d status-Replicas:%d status-ReadyReplicas:%d error: statefulSet was not ready for auto-updating"
-	ErrorPodsHadNotBeenClosed   = "namespace:%s crdName:%s image:%s error: pods hadn't been closed completed"
-)
-
-func UpdateStatefulSetReplicas(ki kubernetes.Interface, namespace, controllerName, specName string, r int32) (int32, error) {
-	klog.Infof("UpdateStatefulSetReplicas namespace:%s controllerName:%s specName:%s replicas:%d",
-		namespace, controllerName, specName, r)
-	var res int32
-	var defaultConfig = wait.Backoff{
-		Steps:    50,
-		Duration: 1 * time.Second,
-		Factor:   1.0,
-		Jitter:   0.1,
-	}
-	err := retry.RetryOnConflict(defaultConfig, func() error {
-		ss, err := ki.AppsV1().StatefulSets(namespace).Get(specName, metaV1.GetOptions{})
-		if err != nil {
-			klog.V(2).Info(err)
-			return err
-		}
-		if *ss.Spec.Replicas != ss.Status.Replicas || ss.Status.Replicas != ss.Status.ReadyReplicas {
-			err = fmt.Errorf(ErrorStatefulSetWasNotReady, *ss.Spec.Replicas, ss.Status.Replicas, ss.Status.ReadyReplicas)
-			klog.V(2).Info(err)
-			return err
-		}
-		if r > 0 {
-			if pl, err := ListPodByLabels(ki, namespace, controllerName, specName); err != nil {
-				klog.V(2).Info(err)
-				return err
-			} else {
-				klog.Infof("namespace:%s controllerName:%s specName:%s pods-numbers:%d", namespace, controllerName, specName, len(pl.Items))
-				if len(pl.Items) > 0 {
-					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, controllerName, specName)
-					klog.V(2).Info(err)
-					return err
-				}
-			}
-		}
-		res = *ss.Spec.Replicas
-		ss.Spec.Replicas = &r
-		if ss, err = ki.AppsV1().StatefulSets(namespace).Update(ss); err != nil {
-			klog.V(2).Info(err)
-			return err
-		}
-		return nil
-	})
-	if errors.IsConflict(err) {
-		err = fmt.Errorf("UpdateMaxRetries(%d) has reached. The UpdateStatefulSetReplicas will retry later for owner namespace:%s specName:%s",
-			defaultConfig.Steps, namespace, specName)
-		klog.V(2).Info(err)
-		return 0, err
-	}
-	return res, err
 }

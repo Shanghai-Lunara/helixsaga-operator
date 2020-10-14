@@ -154,11 +154,12 @@ func GetHelixSagaReplicasPatch(namespace, crdName, specName string, replicas int
 	return json.Marshal(patch)
 }
 
-func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface,
-	namespace, crdName, image string,
-	replicas map[string]int32, recoveredApps map[string]bool) (map[string]int32, map[string]bool, error) {
+const (
+	ErrorPodsHadNotBeenClosed = "namespace:%s crdName:%s image:%s error: pods hadn't been closed completed"
+)
+
+func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.Interface, namespace, crdName, image string, replicas map[string]int32) (map[string]int32, error) {
 	var res = make(map[string]int32, 0)
-	var oldData = recoveredApps
 	var defaultConfig = wait.Backoff{
 		Steps:    10000,
 		Duration: 200 * time.Millisecond,
@@ -166,41 +167,38 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
+		klog.Info("retry.RetryOnConflict ++++ replicas")
+		if len(replicas) > 0 {
+			if pl, err := ListPodByLabels(ki, namespace, crdName, ""); err != nil {
+				klog.V(2).Info(err)
+				return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+			} else {
+				klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
+				if len(pl.Items) > 0 {
+					err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
+					klog.V(2).Info(err)
+					return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
+				}
+			}
+		}
 		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
 		if err != nil {
 			klog.V(2).Info(err)
 			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
 		}
 		exist := false
-		hasErr := false
 		apps := make([]helixSagaV1.HelixSagaApp, 0)
 		for _, v := range hs.Spec.Applications {
 			if v.Spec.Image == image {
 				var a int32
 				if t, ok := replicas[v.Spec.Name]; ok {
-					if _, ok := recoveredApps[v.Spec.Name]; !ok {
-						if pl, err := ListPodByLabels(ki, namespace, crdName, v.Spec.Name); err != nil {
-							klog.V(2).Info(err)
-							hasErr = true
-						} else {
-							klog.Infof("namespace:%s crdName:%s image:%s pods-numbers:%d", namespace, crdName, image, len(pl.Items))
-							if len(pl.Items) > 0 {
-								err = fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image)
-								klog.V(2).Info(err)
-								hasErr = true
-							} else {
-								recoveredApps[v.Spec.Name] = true
-								a = t
-								v.Spec.Replicas = &a
-							}
-						}
-					}
+					a = t
 				} else {
 					res[v.Spec.Name] = *v.Spec.Replicas
-					v.Spec.Replicas = &a
 				}
+				v.Spec.Replicas = &a
 				exist = true
-				klog.Infof("Patch change crd-name:%s image:%s specName:%s", crdName, image, v.Spec.Name)
+				klog.Infof("Patch change crd-name:%s image:%s specName:%s replicas:%d", crdName, image, v.Spec.Name, *v.Spec.Replicas)
 			}
 			apps = append(apps, v)
 		}
@@ -209,16 +207,11 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 			err = fmt.Errorf("error: the crd-name:%s image:%s was not found", crdName, image)
 			klog.V(2).Info(err)
 			defaultConfig.Steps = 0
-			recoveredApps = oldData
 			return err
 		}
 		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Update(hs); err != nil {
-			recoveredApps = oldData
 			klog.V(2).Info(err)
 			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
-		}
-		if hasErr {
-			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", fmt.Errorf(ErrorPodsHadNotBeenClosed, namespace, crdName, image))
 		}
 		return nil
 	})
@@ -227,5 +220,5 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 			defaultConfig.Steps, namespace, crdName, image)
 		klog.V(2).Info(err)
 	}
-	return res, recoveredApps, err
+	return res, err
 }
