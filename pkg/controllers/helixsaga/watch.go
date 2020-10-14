@@ -146,23 +146,18 @@ func (ws *Watchers) Loop(w *Watcher) {
 				continue
 			}
 			if hash != t.Sha256 {
-				//if err := PatchStatefulSet(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga, w.opt.SpecName, w.opt.Image); err != nil {
-				//	klog.V(2).Info(err)
-				//}
-				//if err := PatchPod(w.opt.K8sClientSet, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.SpecName); err != nil {
-				//	klog.V(2).Info(err)
-				//}
 				klog.Infof("HelixSaga:%s get the locker", w.opt.HelixSaga.Name)
 				t := ws.Locker(w.opt.HelixSaga.Name)
 				klog.Infof("HelixSaga:%s start locking", w.opt.HelixSaga.Name)
 				t.Lock()
 				var replica = make(map[string]int32, 0)
-				if replica, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.Image, replica); err != nil {
+				var recoveredApps = make(map[string]bool, 0)
+				if replica, recoveredApps, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.Image, replica, recoveredApps); err != nil {
 					klog.V(2).Info(err)
 					t.Unlock()
 					continue
 				}
-				if _, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.Image, replica); err != nil {
+				if _, _, err = RetryPatchHelixSaga(w.opt.K8sClientSet, w.opt.HelixSagaClient, w.opt.HelixSaga.Namespace, w.opt.HelixSaga.Name, w.opt.Image, replica, recoveredApps); err != nil {
 					klog.V(2).Info(err)
 					t.Unlock()
 					continue
