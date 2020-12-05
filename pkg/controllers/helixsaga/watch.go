@@ -234,19 +234,19 @@ func (wo *WatchOption) GetPodImage() (string, error) {
 			var hash string
 			for _, v := range pl.Items {
 				if v.Status.Phase != corev1.PodRunning {
-					klog.Infof("Pod name:%s Status.Phase:%s", v.Name, v.Status.Phase)
+					klog.V(5).Infof("Pod name:%s Status.Phase:%s", v.Name, v.Status.Phase)
 					continue
 				}
 				if len(v.Status.ContainerStatuses) == 0 {
-					klog.Infof("Pod name:%s ContainerStatuses was empty", v.Name)
+					klog.V(5).Infof("Pod name:%s ContainerStatuses was empty", v.Name)
 					continue
 				}
 				if v.Status.ContainerStatuses[0].Image != wo.Image {
-					klog.Infof("Pod name:%s image:%s was not match the WatchOption image:%s", v.Name, v.Status.ContainerStatuses[0].Image, wo.Image)
+					klog.V(5).Infof("Pod name:%s image:%s was not match the WatchOption image:%s", v.Name, v.Status.ContainerStatuses[0].Image, wo.Image)
 					continue
 				}
 				if v.Status.ContainerStatuses[0].ImageID == "" {
-					klog.Infof("Pod name:%s ContainerStatuses Container:%s image:%s ImageID was empty",
+					klog.V(5).Infof("Pod name:%s ContainerStatuses Container:%s image:%s ImageID was empty",
 						v.Name, v.Status.ContainerStatuses[0].Name, v.Status.ContainerStatuses[0].Image)
 					continue
 				}

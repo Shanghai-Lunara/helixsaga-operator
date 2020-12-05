@@ -50,7 +50,7 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			return err
 		}
 	} else {
-		_, err = ks.Service().Get(hs.Namespace, k8sCoreV1.GetServiceName(spec.Name))
+		svc, err := ks.Service().Get(hs.Namespace, k8sCoreV1.GetServiceName(spec.Name))
 		if err != nil {
 			klog.Info("service err:", err)
 			if !errors.IsNotFound(err) {
@@ -61,7 +61,9 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 				return err
 			}
 		} else {
-			if _, err = ks.Service().Update(hs.Namespace, NewService(hs, spec)); err != nil {
+			tmpSvc := NewService(hs, spec)
+			tmpSvc.ResourceVersion = svc.ResourceVersion
+			if _, err = ks.Service().Update(hs.Namespace, tmpSvc); err != nil {
 				return err
 			}
 		}
