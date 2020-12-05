@@ -254,7 +254,7 @@ func (wo *WatchOption) GetPodImage() (string, error) {
 				break
 			}
 			if hash == "" {
-				klog.Infof("WatchOption GetPodImage HelixSaga Name")
+				klog.V(5).Infof("WatchOption GetPodImage HelixSaga Name")
 				continue
 			}
 			return hash, nil

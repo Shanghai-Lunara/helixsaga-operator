@@ -62,8 +62,11 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			}
 		} else {
 			tmpSvc := NewService(hs, spec)
-			tmpSvc.ResourceVersion = svc.ResourceVersion
-			if _, err = ks.Service().Update(hs.Namespace, tmpSvc); err != nil {
+			svc.Labels = tmpSvc.Labels
+			svc.Spec.Type = tmpSvc.Spec.Type
+			svc.Spec.Ports = tmpSvc.Spec.Ports
+			svc.Spec.Selector = tmpSvc.Spec.Selector
+			if _, err = ks.Service().Update(hs.Namespace, svc); err != nil {
 				return err
 			}
 		}
