@@ -7,3 +7,4 @@ gen:
 
 mod:
 	go mod download
+	go mod tidy
