@@ -5,6 +5,7 @@ import (
 	"time"
 
 	appsV1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -62,12 +63,14 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			}
 		} else {
 			tmpSvc := NewService(hs, spec)
-			svc.Labels = tmpSvc.Labels
-			svc.Spec.Type = tmpSvc.Spec.Type
-			svc.Spec.Ports = tmpSvc.Spec.Ports
-			svc.Spec.Selector = tmpSvc.Spec.Selector
-			if _, err = ks.Service().Update(hs.Namespace, svc); err != nil {
-				return err
+			if ok := compareService(svc, tmpSvc); ok {
+				svc.Labels = tmpSvc.Labels
+				svc.Spec.Type = tmpSvc.Spec.Type
+				svc.Spec.Ports = tmpSvc.Spec.Ports
+				svc.Spec.Selector = tmpSvc.Spec.Selector
+				if _, err = ks.Service().Update(hs.Namespace, svc); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -75,6 +78,46 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 		return err
 	}
 	return nil
+}
+
+func compareService(s1 *coreV1.Service, s2 *coreV1.Service) bool {
+	if s1.Spec.Type != s2.Spec.Type {
+		return true
+	}
+	if len(s1.Spec.Ports) != len(s2.Spec.Ports) {
+		return true
+	}
+	for _, v := range s1.Spec.Ports {
+		exist := false
+		for _, v2 := range s2.Spec.Ports {
+			if v.Port == v2.Port {
+				exist = true
+				if v.Name != v2.Name {
+					return true
+				}
+				if v.NodePort != v2.NodePort && v2.NodePort != 0 {
+					return true
+				}
+				if v.Protocol != v2.Protocol {
+					return true
+				}
+				if v.TargetPort.Type != v2.TargetPort.Type {
+					return true
+				}
+				if v.TargetPort.IntVal != v2.TargetPort.IntVal {
+					return true
+				}
+				if v.TargetPort.StrVal != v2.TargetPort.StrVal {
+					return true
+				}
+				break
+			}
+		}
+		if !exist {
+			return true
+		}
+	}
+	return false
 }
 
 func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Interface, ss *appsV1.StatefulSet, name string) error {
