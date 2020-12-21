@@ -169,7 +169,7 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 	var res = make(map[string]int32, 0)
 	var defaultConfig = wait.Backoff{
 		Steps:    10000,
-		Duration: 200 * time.Millisecond,
+		Duration: 5 * time.Millisecond,
 		Factor:   1.0,
 		Jitter:   0.1,
 	}

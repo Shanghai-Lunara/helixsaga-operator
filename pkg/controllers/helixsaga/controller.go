@@ -149,9 +149,14 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 	for _, v := range hs.Spec.Applications {
 		// starting watching the harbor before creating apps
 		wo := NewWatchOption(context.Background(), ks.ClientSet(), clientSet, hs, v.Spec.Image)
-		if err := c.watchers.Subscribe(wo); err != nil {
-			klog.V(2).Info(err)
-			return err
+		if *v.Spec.Replicas > 0 {
+			if err := c.watchers.Subscribe(wo); err != nil {
+				klog.V(2).Info(err)
+				return err
+			}
+		} else {
+			klog.V(4).Infof("HelixSaga crdName:%s image:%s UnSubscribe due to replicas 0", hs.Name, v.Spec.Image)
+			c.watchers.UnSubscribe(wo)
 		}
 		klog.Info("v:", v)
 		if err := NewStatefulSetAndService(ks, clientSet, hs, v.Spec, wo); err != nil {
