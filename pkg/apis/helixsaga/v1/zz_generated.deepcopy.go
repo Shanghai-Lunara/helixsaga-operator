@@ -118,6 +118,18 @@ func (in *HelixSagaAppSpec) DeepCopyInto(out *HelixSagaAppSpec) {
 		*out = make([]corev1.ServicePort, len(*in))
 		copy(*out, *in)
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(corev1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]corev1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 

@@ -142,6 +142,12 @@ type HelixSagaAppSpec struct {
 	// One of Auto, Manual.
 	// Default to Manual.
 	WatchPolicy WatchPolicy `json:"watchPolicy" protobuf:"bytes,14,rep,name=watchPolicy"`
+	// If specified, the pod's scheduling constraints
+	// +optional
+	Affinity *corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,15,opt,name=affinity"`
+	// If specified, the pod's tolerations.
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty" protobuf:"bytes,16,opt,name=tolerations"`
 }
 
 //HelixSagaAppStatus is the sub status for a HelixSaga resource

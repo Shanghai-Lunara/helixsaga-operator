@@ -2,13 +2,11 @@ package helixsaga
 
 import (
 	"fmt"
-
 	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 	appsV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/json"
 )
 
 func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
@@ -70,30 +68,10 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec
 						},
 					},
 					ImagePullSecrets: spec.ImagePullSecrets,
+					Affinity:         spec.Affinity,
+					Tolerations:      spec.Tolerations,
 				},
 			},
 		},
 	}
-}
-
-func GetStatefulSetImagePatch(hs *helixSagaV1.HelixSaga, specName, image string) ([]byte, error) {
-	patch := map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"name":      k8sCoreV1.GetStatefulSetName(specName),
-			"namespace": hs.Namespace,
-		},
-		"spec": map[string]interface{}{
-			"template": map[string]interface{}{
-				"spec": map[string]interface{}{
-					"containers": []map[string]interface{}{
-						{
-							"name":  k8sCoreV1.GetContainerName(specName),
-							"image": image,
-						},
-					},
-				},
-			},
-		},
-	}
-	return json.Marshal(patch)
 }
