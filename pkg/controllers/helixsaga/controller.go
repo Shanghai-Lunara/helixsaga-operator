@@ -159,7 +159,7 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 			c.watchers.UnSubscribe(wo)
 		}
 		klog.Info("v:", v)
-		if err := NewStatefulSetAndService(ks, clientSet, hs, v.Spec, wo); err != nil {
+		if err := NewStatefulSetAndService(ks, clientSet, hs, &v.Spec, wo); err != nil {
 			klog.V(2).Info(err)
 			return err
 		}

@@ -19,7 +19,16 @@ import (
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
-func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec, wo *WatchOption) error {
+func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec, wo *WatchOption) error {
+	if *spec.Replicas == 0 {
+		if err := ks.StatefulSet().Delete(hs.Namespace, spec.Name); err != nil {
+			klog.V(2).Info(err)
+		}
+		if err := ks.Service().Delete(hs.Namespace, k8sCoreV1.GetStatefulSetName(spec.Name)); err != nil {
+			klog.V(2).Info(err)
+		}
+		return nil
+	}
 	var err error
 	wo.StatefulSet, err = ks.StatefulSet().Get(hs.Namespace, spec.Name)
 	if err != nil {
@@ -40,7 +49,7 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 	}
 	klog.Info("rds:", *spec.Replicas)
 	klog.Info("statefulSet:", *wo.StatefulSet.Spec.Replicas)
-	if spec.Replicas != nil && *spec.Replicas != *wo.StatefulSet.Spec.Replicas || spec.Image != wo.StatefulSet.Spec.Template.Spec.Containers[0].Image {
+	if ok := compareStatefulSet(wo.StatefulSet, spec); ok {
 		if wo.StatefulSet, err = ks.StatefulSet().Update(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
 			klog.V(2).Info(err)
 			return err
@@ -78,6 +87,18 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 		return err
 	}
 	return nil
+}
+
+func compareStatefulSet(original *appsV1.StatefulSet, updateSpec *helixSagaV1.HelixSagaAppSpec) bool {
+	if updateSpec.Replicas != nil && *updateSpec.Replicas != *original.Spec.Replicas {
+		return true
+	}
+	if updateSpec.Image != original.Spec.Template.Spec.Containers[0].Image {
+		return true
+	}
+	// compare Affinity
+	// compare Tolerations
+	return false
 }
 
 func compareService(s1 *coreV1.Service, s2 *coreV1.Service) bool {

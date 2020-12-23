@@ -9,7 +9,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
+func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
 	labels := map[string]string{
 		k8sCoreV1.LabelApp:        OperatorKindName,
 		k8sCoreV1.LabelController: hs.Name,
