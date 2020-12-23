@@ -118,6 +118,13 @@ func (in *HelixSagaAppSpec) DeepCopyInto(out *HelixSagaAppSpec) {
 		*out = make([]corev1.ServicePort, len(*in))
 		copy(*out, *in)
 	}
+	if in.NodeSelector != nil {
+		in, out := &in.NodeSelector, &out.NodeSelector
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Affinity != nil {
 		in, out := &in.Affinity, &out.Affinity
 		*out = new(corev1.Affinity)

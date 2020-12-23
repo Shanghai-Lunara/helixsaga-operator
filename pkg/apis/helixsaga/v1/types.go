@@ -142,12 +142,21 @@ type HelixSagaAppSpec struct {
 	// One of Auto, Manual.
 	// Default to Manual.
 	WatchPolicy WatchPolicy `json:"watchPolicy" protobuf:"bytes,14,rep,name=watchPolicy"`
+	// NodeSelector is a selector which must be true for the pod to fit on a node.
+	// Selector which must match a node's labels for the pod to be scheduled on that node.
+	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+	// +optional
+	NodeSelector map[string]string `json:"nodeSelector,omitempty" protobuf:"bytes,15,rep,name=nodeSelector"`
+	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName,omitempty" protobuf:"bytes,16,opt,name=serviceAccountName"`
 	// If specified, the pod's scheduling constraints
 	// +optional
-	Affinity *corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,15,opt,name=affinity"`
+	Affinity *corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,17,opt,name=affinity"`
 	// If specified, the pod's tolerations.
 	// +optional
-	Tolerations []corev1.Toleration `json:"tolerations,omitempty" protobuf:"bytes,16,opt,name=tolerations"`
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty" protobuf:"bytes,18,opt,name=tolerations"`
 }
 
 //HelixSagaAppStatus is the sub status for a HelixSaga resource
