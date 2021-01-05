@@ -53,7 +53,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpe
 							Name:  k8sCoreV1.GetContainerName(spec.Name),
 							Image: spec.Image,
 							Ports: spec.ContainerPorts,
-							Env:   spec.Env,
+							Env:   ExposePodInformationByEnvs(spec.Env),
 							VolumeMounts: []coreV1.VolumeMount{
 								hs.Spec.ConfigMap.VolumeMount,
 								{
