@@ -20,15 +20,15 @@ import (
 )
 
 func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec, wo *WatchOption) error {
-	if *spec.Replicas == 0 {
-		if err := ks.StatefulSet().Delete(hs.Namespace, spec.Name); err != nil {
-			klog.V(2).Info(err)
-		}
-		if err := ks.Service().Delete(hs.Namespace, k8sCoreV1.GetStatefulSetName(spec.Name)); err != nil {
-			klog.V(2).Info(err)
-		}
-		return nil
-	}
+	//if *spec.Replicas == 0 {
+	//	if err := ks.StatefulSet().Delete(hs.Namespace, spec.Name); err != nil {
+	//		klog.V(2).Info(err)
+	//	}
+	//	if err := ks.Service().Delete(hs.Namespace, k8sCoreV1.GetStatefulSetName(spec.Name)); err != nil {
+	//		klog.V(2).Info(err)
+	//	}
+	//	return nil
+	//}
 	var err error
 	wo.StatefulSet, err = ks.StatefulSet().Get(hs.Namespace, spec.Name)
 	if err != nil {
@@ -39,12 +39,6 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 		klog.Info("new statefulSet")
 		if wo.StatefulSet, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
 			return err
-		}
-		if len(spec.ServicePorts) > 0 {
-			klog.Info("new service init")
-			if _, err = ks.Service().Create(hs.Namespace, NewService(hs, spec)); err != nil {
-				return err
-			}
 		}
 	}
 	klog.Info("rds:", *spec.Replicas)
