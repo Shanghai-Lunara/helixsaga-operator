@@ -50,6 +50,13 @@ const (
 	WatchPolicyManual WatchPolicy = "manual"
 )
 
+type TemplateType string
+
+const (
+	TemplateTypeDeployment  TemplateType = "Deployment"
+	TemplateTypeStatefulSet TemplateType = "StatefulSet"
+)
+
 //HelixSagaAppSpec is the sub spec for a HelixSaga resource
 type HelixSagaAppSpec struct {
 	// Name of the container specified as a DNS_LABEL.
@@ -157,10 +164,58 @@ type HelixSagaAppSpec struct {
 	// If specified, the pod's tolerations.
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty" protobuf:"bytes,18,opt,name=tolerations"`
+	// Template was the type of the resource which would be created by the custom operator
+	Template TemplateType `json:"template" protobuf:"bytes,19,opt,name=template"`
 }
 
 //HelixSagaAppStatus is the sub status for a HelixSaga resource
 type HelixSagaAppStatus struct {
+	Deployment  DeploymentStatus  `json:"deployment" protobuf:"bytes,1,opt,name=deployment"`
+	StatefulSet StatefulSetStatus `json:"statefulSet" protobuf:"bytes,2,opt,name=statefulSet"`
+}
+
+// DeploymentStatus is the most recently observed status of the Deployment.
+type DeploymentStatus struct {
+	// The generation observed by the deployment controller.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,1,opt,name=observedGeneration"`
+
+	// Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+	// +optional
+	Replicas int32 `json:"replicas,omitempty" protobuf:"varint,2,opt,name=replicas"`
+
+	// Total number of non-terminated pods targeted by this deployment that have the desired template spec.
+	// +optional
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty" protobuf:"varint,3,opt,name=updatedReplicas"`
+
+	// Total number of ready pods targeted by this deployment.
+	// +optional
+	ReadyReplicas int32 `json:"readyReplicas,omitempty" protobuf:"varint,7,opt,name=readyReplicas"`
+
+	// Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+	// +optional
+	AvailableReplicas int32 `json:"availableReplicas,omitempty" protobuf:"varint,4,opt,name=availableReplicas"`
+
+	// Total number of unavailable pods targeted by this deployment. This is the total number of
+	// pods that are still required for the deployment to have 100% available capacity. They may
+	// either be pods that are running but not yet available or pods that still have not been created.
+	// +optional
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty" protobuf:"varint,5,opt,name=unavailableReplicas"`
+
+	// Represents the latest available observations of a deployment's current state.
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	//Conditions []DeploymentCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,6,rep,name=conditions"`
+
+	// Count of hash collisions for the Deployment. The Deployment controller uses this
+	// field as a collision avoidance mechanism when it needs to create the name for the
+	// newest ReplicaSet.
+	// +optional
+	CollisionCount *int32 `json:"collisionCount,omitempty" protobuf:"varint,8,opt,name=collisionCount"`
+}
+
+// StatefulSetStatus represents the current state of a StatefulSet.
+type StatefulSetStatus struct {
 	// observedGeneration is the most recent generation observed for this StatefulSet. It corresponds to the
 	// StatefulSet's generation, which is updated on mutation by the API Server.
 	// +optional
@@ -193,6 +248,12 @@ type HelixSagaAppStatus struct {
 	// newest ControllerRevision.
 	// +optional
 	CollisionCount *int32 `json:"collisionCount,omitempty" protobuf:"varint,9,opt,name=collisionCount"`
+
+	// Represents the latest available observations of a statefulset's current state.
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	//Conditions []appsv1.StatefulSetCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,10,rep,name=conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

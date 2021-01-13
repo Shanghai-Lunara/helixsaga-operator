@@ -29,6 +29,41 @@ import "k8s.io/apimachinery/pkg/runtime/schema/generated.proto";
 // Package-wide variables from generator "generated".
 option go_package = "v1";
 
+// DeploymentStatus is the most recently observed status of the Deployment.
+message DeploymentStatus {
+  // The generation observed by the deployment controller.
+  // +optional
+  optional int64 observedGeneration = 1;
+
+  // Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+  // +optional
+  optional int32 replicas = 2;
+
+  // Total number of non-terminated pods targeted by this deployment that have the desired template spec.
+  // +optional
+  optional int32 updatedReplicas = 3;
+
+  // Total number of ready pods targeted by this deployment.
+  // +optional
+  optional int32 readyReplicas = 7;
+
+  // Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+  // +optional
+  optional int32 availableReplicas = 4;
+
+  // Total number of unavailable pods targeted by this deployment. This is the total number of
+  // pods that are still required for the deployment to have 100% available capacity. They may
+  // either be pods that are running but not yet available or pods that still have not been created.
+  // +optional
+  optional int32 unavailableReplicas = 5;
+
+  // Count of hash collisions for the Deployment. The Deployment controller uses this
+  // field as a collision avoidance mechanism when it needs to create the name for the
+  // newest ReplicaSet.
+  // +optional
+  optional int32 collisionCount = 8;
+}
+
 // HelixSaga describes a HelixSaga resource
 message HelixSaga {
   // ObjectMeta contains the metadata for the particular object, including
@@ -174,10 +209,41 @@ message HelixSagaAppSpec {
   // If specified, the pod's tolerations.
   // +optional
   repeated k8s.io.api.core.v1.Toleration tolerations = 18;
+
+  // Template was the type of the resource which would be created by the custom operator
+  optional string template = 19;
 }
 
 // HelixSagaAppStatus is the sub status for a HelixSaga resource
 message HelixSagaAppStatus {
+  optional DeploymentStatus deployment = 1;
+
+  optional StatefulSetStatus statefulSet = 2;
+}
+
+message HelixSagaConfigMap {
+  optional k8s.io.api.core.v1.Volume volume = 1;
+
+  optional k8s.io.api.core.v1.VolumeMount volumeMount = 2;
+}
+
+// HelixSagaList is a list of HelixSaga resources
+message HelixSagaList {
+  // +optional
+  optional k8s.io.apimachinery.pkg.apis.meta.v1.ListMeta metadata = 1;
+
+  repeated HelixSaga items = 2;
+}
+
+// HelixSagaSpec is the spec for a HelixSaga resource
+message HelixSagaSpec {
+  optional HelixSagaConfigMap configMap = 1;
+
+  repeated HelixSagaApp applications = 2;
+}
+
+// StatefulSetStatus represents the current state of a StatefulSet.
+message StatefulSetStatus {
   // observedGeneration is the most recent generation observed for this StatefulSet. It corresponds to the
   // StatefulSet's generation, which is updated on mutation by the API Server.
   // +optional
@@ -210,26 +276,5 @@ message HelixSagaAppStatus {
   // newest ControllerRevision.
   // +optional
   optional int32 collisionCount = 9;
-}
-
-message HelixSagaConfigMap {
-  optional k8s.io.api.core.v1.Volume volume = 1;
-
-  optional k8s.io.api.core.v1.VolumeMount volumeMount = 2;
-}
-
-// HelixSagaList is a list of HelixSaga resources
-message HelixSagaList {
-  // +optional
-  optional k8s.io.apimachinery.pkg.apis.meta.v1.ListMeta metadata = 1;
-
-  repeated HelixSaga items = 2;
-}
-
-// HelixSagaSpec is the spec for a HelixSaga resource
-message HelixSagaSpec {
-  optional HelixSagaConfigMap configMap = 1;
-
-  repeated HelixSagaApp applications = 2;
 }
 
