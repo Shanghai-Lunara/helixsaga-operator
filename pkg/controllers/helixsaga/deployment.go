@@ -9,7 +9,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func compareStatefulSet(original *appsV1.StatefulSet, updateSpec *helixSagaV1.HelixSagaAppSpec) bool {
+func compareDeployment(original *appsV1.Deployment, updateSpec *helixSagaV1.HelixSagaAppSpec) bool {
 	if updateSpec.Replicas != nil && *updateSpec.Replicas != *original.Spec.Replicas {
 		return true
 	}
@@ -21,7 +21,7 @@ func compareStatefulSet(original *appsV1.StatefulSet, updateSpec *helixSagaV1.He
 	return false
 }
 
-func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec) *appsV1.StatefulSet {
+func NewDeployment(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec) *appsV1.Deployment {
 	labels := map[string]string{
 		k8sCoreV1.LabelApp:        OperatorKindName,
 		k8sCoreV1.LabelController: hs.Name,
@@ -32,7 +32,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpe
 		Type: &t,
 		Path: fmt.Sprintf("%s/%s/helixsaga/%s", spec.VolumePath, hs.Namespace, spec.Name),
 	}
-	return &appsV1.StatefulSet{
+	return &appsV1.Deployment{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      k8sCoreV1.GetStatefulSetName(spec.Name),
 			Namespace: hs.Namespace,
@@ -41,7 +41,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpe
 			},
 			Labels: labels,
 		},
-		Spec: appsV1.StatefulSetSpec{
+		Spec: appsV1.DeploymentSpec{
 			Replicas: spec.Replicas,
 			Selector: &metaV1.LabelSelector{
 				MatchLabels: labels,

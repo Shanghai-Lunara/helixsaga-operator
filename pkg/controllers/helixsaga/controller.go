@@ -3,6 +3,7 @@ package helixsaga
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -138,7 +139,14 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 						c.watchers.UnSubscribe(wo)
 					}
 					klog.Info("remove app-name:", v.Spec.Name)
-					if err := DeleteStatefulSetAndService(ks, hs.Namespace, v.Spec.Name); err != nil {
+					if v.Spec.Template == "" {
+						v.Spec.Template = helixsagav1.TemplateTypeStatefulSet
+					}
+					if err := DeleteAppResource(ks, hs.Namespace, v.Spec.Name, v.Spec.Template); err != nil {
+						klog.V(2).Info(err)
+						return err
+					}
+					if err := DeleteService(ks, hs.Namespace, v.Spec.Name); err != nil {
 						klog.V(2).Info(err)
 						return err
 					}
@@ -158,8 +166,27 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 			klog.V(4).Infof("HelixSaga crdName:%s image:%s UnSubscribe due to replicas 0", hs.Name, v.Spec.Image)
 			c.watchers.UnSubscribe(wo)
 		}
-		klog.Info("v:", v)
-		if err := NewStatefulSetAndService(ks, clientSet, hs, &v.Spec, wo); err != nil {
+		// remove old resource if the Template has been changed
+		if old != nil && len(old.Spec.Applications) > 0 {
+			for _, v2 := range old.Spec.Applications {
+				if v2.Spec.Name == v.Spec.Name {
+					if v2.Spec.Template == "" {
+						v2.Spec.Template = helixsagav1.TemplateTypeStatefulSet
+					}
+					if v.Spec.Template == "" {
+						v.Spec.Template = helixsagav1.TemplateTypeStatefulSet
+					}
+					if v2.Spec.Template != v.Spec.Template {
+						klog.Infof("remove old resource if the Template has been changed old-type:%v new-type:%s", v2.Spec.Template, v.Spec.Template)
+						if err := DeleteAppResource(ks, hs.Namespace, v2.Spec.Name, v2.Spec.Template); err != nil {
+							klog.V(2).Info(err)
+							return err
+						}
+					}
+				}
+			}
+		}
+		if err := NewAppResources(ks, clientSet, hs, &v.Spec, wo); err != nil {
 			klog.V(2).Info(err)
 			return err
 		}
@@ -168,26 +195,45 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 	return nil
 }
 
-func (c *controller) SyncStatus(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
-	clientSet := clientObj.(helixsagaclientset.Interface)
-	ss := obj.(*appsv1.StatefulSet)
-	var objName string
-	if t, ok := ss.Labels[k8scorev1.LabelController]; ok {
-		objName = t
-	} else {
-		return fmt.Errorf(ErrResourceNotMatch, "no controller")
-	}
-	hs, err := clientSet.NevercaseV1().HelixSagas(ss.Namespace).Get(objName, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
+func (c *controller) SyncStatus(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) (err error) {
+	var hs *helixsagav1.HelixSaga
 	var appName string
-	if t, ok := ss.Labels[k8scorev1.LabelName]; ok {
-		appName = t
-	} else {
-		return fmt.Errorf(ErrResourceNotMatch, "no appName")
+	clientSet := clientObj.(helixsagaclientset.Interface)
+	switch reflect.TypeOf(obj) {
+	case reflect.TypeOf(&appsv1.Deployment{}):
+		dp := obj.(*appsv1.Deployment)
+		var objName string
+		if t, ok := dp.Labels[k8scorev1.LabelController]; ok {
+			objName = t
+		} else {
+			return fmt.Errorf(ErrResourceNotMatch, "no controller")
+		}
+		if hs, err = clientSet.NevercaseV1().HelixSagas(dp.Namespace).Get(objName, metav1.GetOptions{}); err != nil {
+			return err
+		}
+		if t, ok := dp.Labels[k8scorev1.LabelName]; ok {
+			appName = t
+		} else {
+			return fmt.Errorf(ErrResourceNotMatch, "no appName")
+		}
+	case reflect.TypeOf(&appsv1.StatefulSet{}):
+		ss := obj.(*appsv1.StatefulSet)
+		var objName string
+		if t, ok := ss.Labels[k8scorev1.LabelController]; ok {
+			objName = t
+		} else {
+			return fmt.Errorf(ErrResourceNotMatch, "no controller")
+		}
+		if hs, err = clientSet.NevercaseV1().HelixSagas(ss.Namespace).Get(objName, metav1.GetOptions{}); err != nil {
+			return err
+		}
+		if t, ok := ss.Labels[k8scorev1.LabelName]; ok {
+			appName = t
+		} else {
+			return fmt.Errorf(ErrResourceNotMatch, "no appName")
+		}
 	}
-	if err := updateStatus(hs, clientSet, ss, appName); err != nil {
+	if err := updateStatus(hs, clientSet, obj, appName); err != nil {
 		return err
 	}
 	recorder.Event(hs, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)

@@ -2,6 +2,7 @@ package helixsaga
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	appsV1 "k8s.io/api/apps/v1"
@@ -19,35 +20,54 @@ import (
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 )
 
-func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec, wo *WatchOption) error {
-	//if *spec.Replicas == 0 {
-	//	if err := ks.StatefulSet().Delete(hs.Namespace, spec.Name); err != nil {
-	//		klog.V(2).Info(err)
-	//	}
-	//	if err := ks.Service().Delete(hs.Namespace, k8sCoreV1.GetStatefulSetName(spec.Name)); err != nil {
-	//		klog.V(2).Info(err)
-	//	}
-	//	return nil
-	//}
+func NewAppResources(ks k8sCoreV1.KubernetesResource, client helixSagaClientSet.Interface, hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec, wo *WatchOption) error {
 	var err error
-	wo.StatefulSet, err = ks.StatefulSet().Get(hs.Namespace, spec.Name)
-	if err != nil {
-		klog.Info("statefulSet err:", err)
-		if !errors.IsNotFound(err) {
-			return err
+	var obj interface{}
+	switch spec.Template {
+	case helixSagaV1.TemplateTypeDeployment:
+		wo.Deployment, err = ks.Deployment().Get(hs.Namespace, spec.Name)
+		if err != nil {
+			klog.Info("deployment err:", err)
+			if !errors.IsNotFound(err) {
+				return err
+			}
+			klog.Info("new deployment")
+			if wo.Deployment, err = ks.Deployment().Create(hs.Namespace, NewDeployment(hs, spec)); err != nil {
+				return err
+			}
+		} else {
+			klog.Info("rds:", *spec.Replicas)
+			klog.Info("deployment:", *wo.Deployment.Spec.Replicas)
+			if ok := compareDeployment(wo.Deployment, spec); ok {
+				if wo.Deployment, err = ks.Deployment().Update(hs.Namespace, NewDeployment(hs, spec)); err != nil {
+					klog.V(2).Info(err)
+					return err
+				}
+			}
 		}
-		klog.Info("new statefulSet")
-		if wo.StatefulSet, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
-			return err
+		obj = wo.Deployment
+	case helixSagaV1.TemplateTypeStatefulSet:
+		wo.StatefulSet, err = ks.StatefulSet().Get(hs.Namespace, spec.Name)
+		if err != nil {
+			klog.Info("statefulSet err:", err)
+			if !errors.IsNotFound(err) {
+				return err
+			}
+			klog.Info("new statefulSet")
+			if wo.StatefulSet, err = ks.StatefulSet().Create(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
+				return err
+			}
+		} else {
+			klog.Info("rds:", *spec.Replicas)
+			klog.Info("statefulSet:", *wo.StatefulSet.Spec.Replicas)
+			if ok := compareStatefulSet(wo.StatefulSet, spec); ok {
+				if wo.StatefulSet, err = ks.StatefulSet().Update(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
+					klog.V(2).Info(err)
+					return err
+				}
+			}
 		}
-	}
-	klog.Info("rds:", *spec.Replicas)
-	klog.Info("statefulSet:", *wo.StatefulSet.Spec.Replicas)
-	if ok := compareStatefulSet(wo.StatefulSet, spec); ok {
-		if wo.StatefulSet, err = ks.StatefulSet().Update(hs.Namespace, NewStatefulSet(hs, spec)); err != nil {
-			klog.V(2).Info(err)
-			return err
-		}
+		obj = wo.StatefulSet
 	}
 	if len(spec.ServicePorts) == 0 {
 		if err = ks.Service().Delete(hs.Namespace, k8sCoreV1.GetServiceName(spec.Name)); err != nil {
@@ -77,22 +97,10 @@ func NewStatefulSetAndService(ks k8sCoreV1.KubernetesResource, client helixSagaC
 			}
 		}
 	}
-	if err = updateStatus(hs, client, wo.StatefulSet, spec.Name); err != nil {
+	if err = updateStatus(hs, client, obj, spec.Name); err != nil {
 		return err
 	}
 	return nil
-}
-
-func compareStatefulSet(original *appsV1.StatefulSet, updateSpec *helixSagaV1.HelixSagaAppSpec) bool {
-	if updateSpec.Replicas != nil && *updateSpec.Replicas != *original.Spec.Replicas {
-		return true
-	}
-	if updateSpec.Image != original.Spec.Template.Spec.Containers[0].Image {
-		return true
-	}
-	// compare Affinity
-	// compare Tolerations
-	return false
 }
 
 func compareService(s1 *coreV1.Service, s2 *coreV1.Service) bool {
@@ -135,7 +143,7 @@ func compareService(s1 *coreV1.Service, s2 *coreV1.Service) bool {
 	return false
 }
 
-func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Interface, ss *appsV1.StatefulSet, name string) error {
+func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Interface, obj interface{}, name string) error {
 	// NEVER modify objects from the store. It's a read-only, local cache.
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
@@ -143,14 +151,28 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	t := make([]helixSagaV1.HelixSagaApp, 0)
 	for _, v := range fooCopy.Spec.Applications {
 		if v.Spec.Name == name {
-			v.Status.ObservedGeneration = ss.Status.ObservedGeneration
-			v.Status.Replicas = ss.Status.Replicas
-			v.Status.ReadyReplicas = ss.Status.ReadyReplicas
-			v.Status.CurrentReplicas = ss.Status.CurrentReplicas
-			v.Status.UpdatedReplicas = ss.Status.UpdatedReplicas
-			v.Status.CurrentRevision = ss.Status.CurrentRevision
-			v.Status.UpdateRevision = ss.Status.UpdateRevision
-			v.Status.CollisionCount = ss.Status.CollisionCount
+			switch reflect.TypeOf(obj) {
+			case reflect.TypeOf(&appsV1.Deployment{}):
+				dp := obj.(*appsV1.Deployment)
+				v.Status.Deployment.ObservedGeneration = dp.Status.ObservedGeneration
+				v.Status.Deployment.Replicas = dp.Status.Replicas
+				v.Status.Deployment.UpdatedReplicas = dp.Status.UpdatedReplicas
+				v.Status.Deployment.ReadyReplicas = dp.Status.ReadyReplicas
+				v.Status.Deployment.AvailableReplicas = dp.Status.AvailableReplicas
+				v.Status.Deployment.UnavailableReplicas = dp.Status.UnavailableReplicas
+				v.Status.Deployment.CollisionCount = dp.Status.CollisionCount
+			case reflect.TypeOf(&appsV1.StatefulSet{}):
+				ss := obj.(*appsV1.StatefulSet)
+				v.Status.StatefulSet.ObservedGeneration = ss.Status.ObservedGeneration
+				v.Status.StatefulSet.Replicas = ss.Status.Replicas
+				v.Status.StatefulSet.ReadyReplicas = ss.Status.ReadyReplicas
+				v.Status.StatefulSet.CurrentReplicas = ss.Status.CurrentReplicas
+				v.Status.StatefulSet.UpdatedReplicas = ss.Status.UpdatedReplicas
+				v.Status.StatefulSet.CurrentRevision = ss.Status.CurrentRevision
+				v.Status.StatefulSet.UpdateRevision = ss.Status.UpdateRevision
+				v.Status.StatefulSet.CollisionCount = ss.Status.CollisionCount
+			}
+
 		}
 		t = append(t, v)
 	}
@@ -164,16 +186,18 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	return err
 }
 
-func DeleteStatefulSetAndService(ks k8sCoreV1.KubernetesResource, namespace string, name string) error {
-	if err := ks.StatefulSet().Delete(namespace, name); err != nil {
-		klog.V(2).Info(err)
-		return err
-	}
-	if err := ks.Service().Delete(namespace, k8sCoreV1.GetServiceName(name)); err != nil {
-		klog.V(2).Info(err)
-		return err
+func DeleteAppResource(ks k8sCoreV1.KubernetesResource, namespace string, name string, template helixSagaV1.TemplateType) error {
+	switch template {
+	case helixSagaV1.TemplateTypeDeployment:
+		return ks.Deployment().Delete(namespace, name)
+	case helixSagaV1.TemplateTypeStatefulSet:
+		return ks.StatefulSet().Delete(namespace, name)
 	}
 	return nil
+}
+
+func DeleteService(ks k8sCoreV1.KubernetesResource, namespace string, name string) error {
+	return ks.Service().Delete(namespace, k8sCoreV1.GetServiceName(name))
 }
 
 const (

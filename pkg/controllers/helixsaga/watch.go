@@ -187,6 +187,7 @@ type WatchOption struct {
 	K8sClientSet    kubernetes.Interface
 	HelixSagaClient helixSagaClientSet.Interface
 	StatefulSet     *appsv1.StatefulSet
+	Deployment      *appsv1.Deployment
 	HelixSaga       *helixsagav1.HelixSaga
 
 	ctx    context.Context
