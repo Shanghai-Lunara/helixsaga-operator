@@ -9,7 +9,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -66,7 +65,8 @@ func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}, 
 		klog.Fatalf("Error building clientSet: %s", err.Error())
 	}
 	controller := &controller{
-		watchers: NewWatchers(harborConfig),
+		watchers:  NewWatchers(harborConfig),
+		lastCache: &helixsagav1.HelixSaga{},
 	}
 	informerFactory := informersext.NewSharedInformerFactory(c, time.Second*30)
 	fooInformer := informerFactory.Nevercase().V1().HelixSagas()
@@ -86,8 +86,9 @@ func NewOption(controllerName string, cfg *rest.Config, stopCh <-chan struct{}, 
 }
 
 type controller struct {
-	mu       sync.Mutex
-	watchers *Watchers
+	mu        sync.Mutex
+	watchers  *Watchers
+	lastCache *helixsagav1.HelixSaga
 }
 
 func (c *controller) CompareResourceVersion(old, new interface{}) bool {
@@ -98,6 +99,7 @@ func (c *controller) CompareResourceVersion(old, new interface{}) bool {
 		// Two different versions of the same HelixSaga will always have different RVs.
 		return true
 	}
+	c.lastCache = oldResource
 	return false
 }
 
@@ -109,47 +111,40 @@ func (c *controller) Get(foo interface{}, nameSpace, ownerRefName string) (obj i
 func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.KubernetesResource, recorder record.EventRecorder) error {
 	hs := obj.(*helixsagav1.HelixSaga)
 	clientSet := clientObj.(helixsagaclientset.Interface)
-	opts := metav1.GetOptions{ResourceVersion: hs.ResourceVersion}
-	old, err := clientSet.NevercaseV1().HelixSagas(hs.Namespace).Get(hs.Name, opts)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			klog.V(2).Info(err)
-			return err
-		} else {
-			names := make(map[string]bool, len(hs.Spec.Applications))
-			images := make(map[string]int, 0)
-			for _, v := range hs.Spec.Applications {
-				names[v.Spec.Name] = true
-				if _, ok := images[v.Spec.Name]; ok {
-					images[v.Spec.Name] += 1
-				} else {
-					images[v.Spec.Name] = 1
-				}
+	if c.lastCache != nil && len(c.lastCache.Spec.Applications) > 0 {
+		names := make(map[string]bool, len(hs.Spec.Applications))
+		images := make(map[string]int, 0)
+		for _, v := range hs.Spec.Applications {
+			names[v.Spec.Name] = true
+			if _, ok := images[v.Spec.Name]; ok {
+				images[v.Spec.Name] += 1
+			} else {
+				images[v.Spec.Name] = 1
 			}
-			for _, v := range old.Spec.Applications {
-				if _, ok := names[v.Spec.Name]; !ok {
-					// stop watching before removing apps
-					wo := &WatchOption{
-						Namespace:    hs.Namespace,
-						OperatorName: hs.Name,
-						Image:        v.Spec.Image,
-					}
-					if _, ok := images[v.Spec.Image]; !ok {
-						klog.Infof("HelixSaga crdName:%s image:%s has been removed", hs.Name, v.Spec.Image)
-						c.watchers.UnSubscribe(wo)
-					}
-					klog.Info("remove app-name:", v.Spec.Name)
-					if v.Spec.Template == "" {
-						v.Spec.Template = helixsagav1.TemplateTypeStatefulSet
-					}
-					if err := DeleteAppResource(ks, hs.Namespace, v.Spec.Name, v.Spec.Template); err != nil {
-						klog.V(2).Info(err)
-						return err
-					}
-					if err := DeleteService(ks, hs.Namespace, v.Spec.Name); err != nil {
-						klog.V(2).Info(err)
-						return err
-					}
+		}
+		for _, v := range c.lastCache.Spec.Applications {
+			if _, ok := names[v.Spec.Name]; !ok {
+				// stop watching before removing apps
+				wo := &WatchOption{
+					Namespace:    hs.Namespace,
+					OperatorName: hs.Name,
+					Image:        v.Spec.Image,
+				}
+				if _, ok := images[v.Spec.Image]; !ok {
+					klog.Infof("HelixSaga crdName:%s image:%s has been removed", hs.Name, v.Spec.Image)
+					c.watchers.UnSubscribe(wo)
+				}
+				klog.Info("remove app-name:", v.Spec.Name)
+				if v.Spec.Template == "" {
+					v.Spec.Template = helixsagav1.TemplateTypeStatefulSet
+				}
+				if err := DeleteAppResource(ks, hs.Namespace, v.Spec.Name, v.Spec.Template); err != nil {
+					klog.V(2).Info(err)
+					return err
+				}
+				if err := DeleteService(ks, hs.Namespace, v.Spec.Name); err != nil {
+					klog.V(2).Info(err)
+					return err
 				}
 			}
 		}
@@ -167,8 +162,8 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 			c.watchers.UnSubscribe(wo)
 		}
 		// remove old resource if the Template has been changed
-		if old != nil && len(old.Spec.Applications) > 0 {
-			for _, v2 := range old.Spec.Applications {
+		if c.lastCache != nil && len(c.lastCache.Spec.Applications) > 0 {
+			for _, v2 := range c.lastCache.Spec.Applications {
 				if v2.Spec.Name == v.Spec.Name {
 					if v2.Spec.Template == "" {
 						v2.Spec.Template = helixsagav1.TemplateTypeStatefulSet
@@ -176,6 +171,7 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 					if v.Spec.Template == "" {
 						v.Spec.Template = helixsagav1.TemplateTypeStatefulSet
 					}
+					klog.Infof("old template:%v new template:%v", v2.Spec.Template, v.Spec.Template)
 					if v2.Spec.Template != v.Spec.Template {
 						klog.Infof("remove old resource if the Template has been changed old-type:%v new-type:%s", v2.Spec.Template, v.Spec.Template)
 						if err := DeleteAppResource(ks, hs.Namespace, v2.Spec.Name, v2.Spec.Template); err != nil {
