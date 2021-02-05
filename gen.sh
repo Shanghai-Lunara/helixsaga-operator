@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export GOPATH="/Users/nevermore/go"
+export GOPATH=`go env | grep -i gopath | awk '{split($0,a,"\""); print a[2]}'`
 
 # 代码生成的工作目录，也就是我们的项目路径
 ROOT_PACKAGE="github.com/Shanghai-Lunara/helixsaga-operator"
