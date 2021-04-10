@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -39,7 +41,7 @@ var helixsagasResource = schema.GroupVersionResource{Group: "nevercase.io", Vers
 var helixsagasKind = schema.GroupVersionKind{Group: "nevercase.io", Version: "v1", Kind: "HelixSaga"}
 
 // Get takes name of the helixSaga, and returns the corresponding helixSaga object, and an error if there is any.
-func (c *FakeHelixSagas) Get(name string, options v1.GetOptions) (result *helixsagav1.HelixSaga, err error) {
+func (c *FakeHelixSagas) Get(ctx context.Context, name string, options v1.GetOptions) (result *helixsagav1.HelixSaga, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(helixsagasResource, c.ns, name), &helixsagav1.HelixSaga{})
 
@@ -50,7 +52,7 @@ func (c *FakeHelixSagas) Get(name string, options v1.GetOptions) (result *helixs
 }
 
 // List takes label and field selectors, and returns the list of HelixSagas that match those selectors.
-func (c *FakeHelixSagas) List(opts v1.ListOptions) (result *helixsagav1.HelixSagaList, err error) {
+func (c *FakeHelixSagas) List(ctx context.Context, opts v1.ListOptions) (result *helixsagav1.HelixSagaList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(helixsagasResource, helixsagasKind, c.ns, opts), &helixsagav1.HelixSagaList{})
 
@@ -72,14 +74,14 @@ func (c *FakeHelixSagas) List(opts v1.ListOptions) (result *helixsagav1.HelixSag
 }
 
 // Watch returns a watch.Interface that watches the requested helixSagas.
-func (c *FakeHelixSagas) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeHelixSagas) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(helixsagasResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a helixSaga and creates it.  Returns the server's representation of the helixSaga, and an error, if there is any.
-func (c *FakeHelixSagas) Create(helixSaga *helixsagav1.HelixSaga) (result *helixsagav1.HelixSaga, err error) {
+func (c *FakeHelixSagas) Create(ctx context.Context, helixSaga *helixsagav1.HelixSaga, opts v1.CreateOptions) (result *helixsagav1.HelixSaga, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(helixsagasResource, c.ns, helixSaga), &helixsagav1.HelixSaga{})
 
@@ -90,7 +92,7 @@ func (c *FakeHelixSagas) Create(helixSaga *helixsagav1.HelixSaga) (result *helix
 }
 
 // Update takes the representation of a helixSaga and updates it. Returns the server's representation of the helixSaga, and an error, if there is any.
-func (c *FakeHelixSagas) Update(helixSaga *helixsagav1.HelixSaga) (result *helixsagav1.HelixSaga, err error) {
+func (c *FakeHelixSagas) Update(ctx context.Context, helixSaga *helixsagav1.HelixSaga, opts v1.UpdateOptions) (result *helixsagav1.HelixSaga, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(helixsagasResource, c.ns, helixSaga), &helixsagav1.HelixSaga{})
 
@@ -101,7 +103,7 @@ func (c *FakeHelixSagas) Update(helixSaga *helixsagav1.HelixSaga) (result *helix
 }
 
 // Delete takes name of the helixSaga and deletes it. Returns an error if one occurs.
-func (c *FakeHelixSagas) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeHelixSagas) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(helixsagasResource, c.ns, name), &helixsagav1.HelixSaga{})
 
@@ -109,15 +111,15 @@ func (c *FakeHelixSagas) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeHelixSagas) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(helixsagasResource, c.ns, listOptions)
+func (c *FakeHelixSagas) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(helixsagasResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &helixsagav1.HelixSagaList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched helixSaga.
-func (c *FakeHelixSagas) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *helixsagav1.HelixSaga, err error) {
+func (c *FakeHelixSagas) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *helixsagav1.HelixSaga, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(helixsagasResource, c.ns, name, pt, data, subresources...), &helixsagav1.HelixSaga{})
 

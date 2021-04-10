@@ -1,6 +1,7 @@
 package helixsaga
 
 import (
+	"context"
 	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +20,7 @@ func ListPodByLabels(ki kubernetes.Interface, namespace, controllerName, specNam
 		TimeoutSeconds: &timeout,
 	}
 	//fmt.Println(fields.OneTermEqualSelector("status.phase", string(corev1.PodRunning)).String())
-	return ki.CoreV1().Pods(namespace).List(opts)
+	return ki.CoreV1().Pods(namespace).List(context.Background(), opts)
 }
 
 // GetLabelSelector returns the LabelSelector of the metav1.ListOptions

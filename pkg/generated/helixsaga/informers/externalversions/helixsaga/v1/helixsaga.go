@@ -19,6 +19,7 @@ limitations under the License.
 package v1
 
 import (
+	"context"
 	time "time"
 
 	helixsagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
@@ -61,13 +62,13 @@ func NewFilteredHelixSagaInformer(client versioned.Interface, namespace string, 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NevercaseV1().HelixSagas(namespace).List(options)
+				return client.NevercaseV1().HelixSagas(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NevercaseV1().HelixSagas(namespace).Watch(options)
+				return client.NevercaseV1().HelixSagas(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&helixsagav1.HelixSaga{},
