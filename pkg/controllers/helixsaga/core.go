@@ -1,7 +1,9 @@
 package helixsaga
 
 import (
+	"context"
 	"fmt"
+	"github.com/nevercase/k8s-controller-custom-resource/pkg/env"
 	"reflect"
 	"time"
 
@@ -182,7 +184,10 @@ func updateStatus(foo *helixSagaV1.HelixSaga, clientSet helixSagaClientSet.Inter
 	// we must use Update instead of UpdateStatus to update the Status block of the RedisOperator resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := clientSet.NevercaseV1().HelixSagas(foo.Namespace).Update(fooCopy)
+	opt := metav1.UpdateOptions{}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(env.DefaultExecutionDuration))
+	_, err := clientSet.NevercaseV1().HelixSagas(foo.Namespace).Update(ctx, fooCopy, opt)
+	cancel()
 	return err
 }
 
@@ -213,7 +218,9 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 		Jitter:   0.1,
 	}
 	err := retry.RetryOnConflict(defaultConfig, func() error {
-		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(crdName, metav1.GetOptions{})
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(env.DefaultExecutionDuration))
+		hs, err := clientSet.NevercaseV1().HelixSagas(namespace).Get(ctx, crdName, metav1.GetOptions{})
+		cancel()
 		if err != nil {
 			klog.V(2).Info(err)
 			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
@@ -271,7 +278,11 @@ func RetryPatchHelixSaga(ki kubernetes.Interface, clientSet helixSagaClientSet.I
 			defaultConfig.Steps = 0
 			return err
 		}
-		if _, err = clientSet.NevercaseV1().HelixSagas(namespace).Update(hs); err != nil {
+		opt := metav1.UpdateOptions{}
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second*time.Duration(env.DefaultExecutionDuration))
+		_, err = clientSet.NevercaseV1().HelixSagas(namespace).Update(ctx, hs, opt)
+		cancel()
+		if err != nil {
 			klog.V(2).Info(err)
 			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "RetryPatchHelixSaga", err)
 		}

@@ -18,6 +18,7 @@ github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200819030844-966a05313a03
 github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200827085804-abf53816be1d/go.mod h1:y/BiMiMBe5BfTU3nS4xmUm4RAwOUN5V7wTAzJejXpLo=
 github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200903071621-279c87e50162/go.mod h1:UJDVz/uoZhhVNNGHDrc65cBq1JT6dc8JC7TGV6pa8pk=
 github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20200908053823-f9fbcf204e90/go.mod h1:b0gnP5fnwobYv69gePRCnUOy77qGROMG/KTCrY+Zh/4=
+github.com/Shanghai-Lunara/helixsaga-operator v0.0.0-20210410063026-ad4605d2f45b/go.mod h1:5lB/iayOWoJ/Kw/yn66Y7rRhzuZ9U5v0Z4ySBy/9wII=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/davecgh/go-spew v0.0.0-20151105211317-5215b55f46b2/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -112,6 +113,8 @@ github.com/nevercase/harbor-api v0.0.0-20200717061801-a02d77b6e535 h1:i6nvJvDGHj
 github.com/nevercase/harbor-api v0.0.0-20200717061801-a02d77b6e535/go.mod h1:/NDdtl4wLA+nPVN6N+Xy4xKKWi2ulHglZwDOvHxa1nE=
 github.com/nevercase/harbor-api v0.0.0-20201010035445-4a7dfa7c098b h1:MNf7qdVMub9APjKhGAi5cmjFFJYOXyWQM6ZoYSZf+UY=
 github.com/nevercase/harbor-api v0.0.0-20201010035445-4a7dfa7c098b/go.mod h1:/NDdtl4wLA+nPVN6N+Xy4xKKWi2ulHglZwDOvHxa1nE=
+github.com/nevercase/harbor-api v0.0.0-20210106033732-e7c0582cc57b h1:L2TbJcIAKbY7j2RHsyjXB/TwWxmvONio0RYERyayWug=
+github.com/nevercase/harbor-api v0.0.0-20210106033732-e7c0582cc57b/go.mod h1:fZEzKNBjY0S7nwhravn9zESrDhi6n3DfgzrJOSQxdfA=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200717080405-ac4619074009 h1:37+mJX6gp+KdgUuSkS9QpBqfaGPDiPSdNALAdwH1Yro=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200717080405-ac4619074009/go.mod h1:9eK+R0nkBYAe0JXVF5svNwvPfsuOUrLPOiEEvcvjnnw=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200814062711-3a466b2f7cf3 h1:X/5/HJewAh9uWorizm4XIvS4mmFMrnexHe4fSoim48Y=
@@ -126,6 +129,8 @@ github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200908053329-9c0d33
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20200908053329-9c0d33a47c5e/go.mod h1:aQxEAqBA4CbEgNj/7j54Su+jbGYvdSC6tksutpVEuZc=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20201008035539-143fcc5213b7 h1:To/uE3YRc9k23ddLUwVDNznhdsrZAaxmK9p2rztYBIM=
 github.com/nevercase/k8s-controller-custom-resource v0.0.0-20201008035539-143fcc5213b7/go.mod h1:Q0wgVUFpTtHAnv1FNib/MUsW1rJ8eRrQbJtFpyU6E74=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20210410075810-b0742ab026e1 h1:ePNpMJ013ZO5AsnNTYIkDMdXgpKLyRjhWhsLMYZhWRE=
+github.com/nevercase/k8s-controller-custom-resource v0.0.0-20210410075810-b0742ab026e1/go.mod h1:OcqVLoEukD/mZmxJ9QRUrQcoQCRlAVgOhOZIFgcDVeI=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=

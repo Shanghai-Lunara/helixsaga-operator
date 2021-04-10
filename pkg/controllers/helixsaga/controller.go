@@ -3,6 +3,7 @@ package helixsaga
 import (
 	"context"
 	"fmt"
+	"github.com/nevercase/k8s-controller-custom-resource/pkg/env"
 	"reflect"
 	"sync"
 	"time"
@@ -211,7 +212,10 @@ func (c *controller) SyncStatus(obj interface{}, clientObj interface{}, ks k8sco
 		} else {
 			return fmt.Errorf(ErrResourceNotMatch, "no controller")
 		}
-		if hs, err = clientSet.NevercaseV1().HelixSagas(dp.Namespace).Get(objName, metav1.GetOptions{}); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(env.DefaultExecutionDuration))
+		hs, err = clientSet.NevercaseV1().HelixSagas(dp.Namespace).Get(ctx, objName, metav1.GetOptions{})
+		cancel()
+		if err != nil {
 			return err
 		}
 		if t, ok := dp.Labels[k8scorev1.LabelName]; ok {
@@ -227,7 +231,10 @@ func (c *controller) SyncStatus(obj interface{}, clientObj interface{}, ks k8sco
 		} else {
 			return fmt.Errorf(ErrResourceNotMatch, "no controller")
 		}
-		if hs, err = clientSet.NevercaseV1().HelixSagas(ss.Namespace).Get(objName, metav1.GetOptions{}); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(env.DefaultExecutionDuration))
+		hs, err = clientSet.NevercaseV1().HelixSagas(ss.Namespace).Get(ctx, objName, metav1.GetOptions{})
+		cancel()
+		if err != nil {
 			return err
 		}
 		if t, ok := ss.Labels[k8scorev1.LabelName]; ok {
