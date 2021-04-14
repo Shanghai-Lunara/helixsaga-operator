@@ -1,30 +1,36 @@
 package helixsaga
 
 import (
-	coreV1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	helixSagaV1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
-	k8sCoreV1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
+	helixSagav1 "github.com/Shanghai-Lunara/helixsaga-operator/pkg/apis/helixsaga/v1"
+	"github.com/Shanghai-Lunara/helixsaga-operator/pkg/serviceloadbalancer"
+	k8scorev1 "github.com/nevercase/k8s-controller-custom-resource/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func NewService(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec) *coreV1.Service {
+func NewService(hs *helixSagav1.HelixSaga, spec *helixSagav1.HelixSagaAppSpec) *corev1.Service {
 	labels := map[string]string{
-		k8sCoreV1.LabelApp:        OperatorKindName,
-		k8sCoreV1.LabelController: hs.Name,
-		k8sCoreV1.LabelName:       spec.Name,
+		k8scorev1.LabelApp:        OperatorKindName,
+		k8scorev1.LabelController: hs.Name,
+		k8scorev1.LabelName:       spec.Name,
 	}
-	return &coreV1.Service{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name:      k8sCoreV1.GetServiceName(spec.Name),
+	annotations := make(map[string]string, 0)
+	switch spec.ServiceType {
+	case corev1.ServiceTypeLoadBalancer:
+		annotations = serviceloadbalancer.Get().Annotations
+	}
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      k8scorev1.GetServiceName(spec.Name),
 			Namespace: hs.Namespace,
-			OwnerReferences: []metaV1.OwnerReference{
-				*metaV1.NewControllerRef(hs, helixSagaV1.SchemeGroupVersion.WithKind(OperatorKindName)),
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(hs, helixSagav1.SchemeGroupVersion.WithKind(OperatorKindName)),
 			},
-			Labels: labels,
+			Labels:      labels,
+			Annotations: annotations,
 		},
-		Spec: coreV1.ServiceSpec{
-			Type:     k8sCoreV1.GetServiceType(spec.ServiceType),
+		Spec: corev1.ServiceSpec{
+			Type:     k8scorev1.GetServiceType(spec.ServiceType),
 			Ports:    spec.ServicePorts,
 			Selector: labels,
 		},

@@ -47,6 +47,15 @@ func TestInit(t *testing.T) {
 			},
 			expectedResult: false,
 		},
+		{
+			name: "TestInit_case3",
+			args: args{
+				configFile: fmt.Sprintf("%s/svc.yaml", path),
+			},
+			want: &Annotations{
+			},
+			expectedResult: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -59,22 +68,6 @@ func TestInit(t *testing.T) {
 				if got := Init(tt.args.configFile); reflect.DeepEqual(got, tt.want) {
 					t.Errorf("Init() = %v, want %v", got, tt.want)
 				}
-			}
-		})
-	}
-}
-
-func TestLabels(t *testing.T) {
-	tests := []struct {
-		name string
-		want *Annotations
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Labels(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Labels() = %v, want %v", got, tt.want)
 			}
 		})
 	}

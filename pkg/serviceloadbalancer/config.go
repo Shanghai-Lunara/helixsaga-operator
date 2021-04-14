@@ -25,6 +25,6 @@ func Init(configFile string) *Annotations {
 	return c
 }
 
-func Labels() *Annotations {
+func Get() *Annotations {
 	return annotations
 }
