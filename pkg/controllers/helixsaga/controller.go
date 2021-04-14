@@ -93,6 +93,8 @@ type controller struct {
 }
 
 func (c *controller) CompareResourceVersion(old, new interface{}) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	newResource := new.(*helixsagav1.HelixSaga)
 	oldResource := old.(*helixsagav1.HelixSaga)
 	if newResource.ResourceVersion == oldResource.ResourceVersion {

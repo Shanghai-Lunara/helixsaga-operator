@@ -13,16 +13,16 @@ type Annotations struct {
 var annotations *Annotations
 
 func Init(configFile string) *Annotations {
-	c := &Annotations{}
+	annotations = &Annotations{}
 	var data []byte
 	var err error
 	if data, err = ioutil.ReadFile(configFile); err != nil {
 		zaplogger.Sugar().Fatal(err)
 	}
-	if err := yaml.Unmarshal(data, c); err != nil {
+	if err := yaml.Unmarshal(data, annotations); err != nil {
 		zaplogger.Sugar().Fatal(err)
 	}
-	return c
+	return annotations
 }
 
 func Get() *Annotations {
