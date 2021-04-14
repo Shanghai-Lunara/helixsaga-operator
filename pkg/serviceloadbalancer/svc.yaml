@@ -1,0 +1,3 @@
+annotations:
+  service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id: 'abc'
+  service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners: 'false'
