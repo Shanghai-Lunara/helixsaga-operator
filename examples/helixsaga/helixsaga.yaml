@@ -4,8 +4,16 @@ metadata:
   name: helixsagas.nevercase.io
 spec:
   group: nevercase.io
-  version: v1
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
   names:
     kind: HelixSaga
     plural: helixsagas
+    singular: helixsaga
+    shortNames:
+      - hs
   scope: Namespaced
