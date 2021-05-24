@@ -8,8 +8,8 @@ require (
 	github.com/nevercase/harbor-api v0.0.0-20210414032946-69012ccd9adc
 	github.com/nevercase/k8s-controller-custom-resource v0.0.0-20210410075810-b0742ab026e1
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	k8s.io/api v0.18.6
-	k8s.io/apimachinery v0.18.6
-	k8s.io/client-go v0.18.6
+	k8s.io/api v0.20.4
+	k8s.io/apimachinery v0.20.4
+	k8s.io/client-go v0.20.4
 	k8s.io/klog/v2 v2.4.0
 )
