@@ -31,6 +31,11 @@ func TestInit(t *testing.T) {
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc",
 					"service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners": "false",
 				},
+				WhiteList: map[string]string{
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status": "on",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":     "${YOUR_ACL_ID}",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":   "white",
+				},
 			},
 			expectedResult: true,
 		},
@@ -41,8 +46,13 @@ func TestInit(t *testing.T) {
 			},
 			want: &Annotations{
 				Annotations: map[string]string{
-					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc111",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc",
 					"service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners": "false",
+				},
+				WhiteList: map[string]string{
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-statusx": "on",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":     "${YOUR_ACL_ID}",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":   "white1",
 				},
 			},
 			expectedResult: false,
@@ -53,7 +63,24 @@ func TestInit(t *testing.T) {
 				configFile: fmt.Sprintf("%s/svc.yaml", path),
 			},
 			want: &Annotations{
+				Annotations: map[string]string{
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc111",
+					"service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners": "false",
+				},
+				WhiteList: map[string]string{
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status": "on",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":     "${YOUR_ACL_ID}",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":   "white",
+				},
 			},
+			expectedResult: false,
+		},
+		{
+			name: "TestInit_case4",
+			args: args{
+				configFile: fmt.Sprintf("%s/svc.yaml", path),
+			},
+			want:           &Annotations{},
 			expectedResult: false,
 		},
 	}

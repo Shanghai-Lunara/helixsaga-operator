@@ -109,6 +109,9 @@ func compareService(s1 *coreV1.Service, s2 *coreV1.Service) bool {
 	if s1.Spec.Type != s2.Spec.Type {
 		return true
 	}
+	if len(s1.Annotations) != len(s2.Annotations) {
+		return true
+	}
 	if len(s1.Spec.Ports) != len(s2.Spec.Ports) {
 		return true
 	}

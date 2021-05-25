@@ -1,3 +1,7 @@
 annotations:
   service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id: 'abc'
   service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners: 'false'
+whiteList:
+  service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status: "on"
+  service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id: "${YOUR_ACL_ID}"
+  service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type: "white"

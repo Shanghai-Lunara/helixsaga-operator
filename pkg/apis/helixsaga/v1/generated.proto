@@ -212,6 +212,9 @@ message HelixSagaAppSpec {
 
   // Template was the type of the resource which would be created by the custom operator
   optional string template = 19;
+
+  // ServiceWhiteList
+  optional bool serviceWhiteList = 20;
 }
 
 // HelixSagaAppStatus is the sub status for a HelixSaga resource

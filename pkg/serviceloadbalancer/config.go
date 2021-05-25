@@ -8,6 +8,7 @@ import (
 
 type Annotations struct {
 	Annotations map[string]string `yaml:"annotations"`
+	WhiteList   map[string]string `yaml:"whiteList"`
 }
 
 var annotations *Annotations
@@ -26,5 +27,11 @@ func Init(configFile string) *Annotations {
 }
 
 func Get() *Annotations {
+	if annotations == nil {
+		annotations = &Annotations{
+			Annotations: make(map[string]string, 0),
+			WhiteList:   make(map[string]string, 0),
+		}
+	}
 	return annotations
 }

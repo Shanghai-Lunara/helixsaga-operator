@@ -18,6 +18,11 @@ func NewService(hs *helixSagav1.HelixSaga, spec *helixSagav1.HelixSagaAppSpec) *
 	switch spec.ServiceType {
 	case corev1.ServiceTypeLoadBalancer:
 		annotations = serviceloadbalancer.Get().Annotations
+		if spec.ServiceWhiteList == true {
+			for k, v := range serviceloadbalancer.Get().WhiteList {
+				annotations[k] = v
+			}
+		}
 	}
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
