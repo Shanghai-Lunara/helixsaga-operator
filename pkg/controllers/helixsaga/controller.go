@@ -121,6 +121,7 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 			lastCache = t
 			if len(t.Spec.Applications) > 0 {
 				names := make(map[string]bool, len(hs.Spec.Applications))
+				whiteLists := make(map[string]bool, len(hs.Spec.Applications))
 				images := make(map[string]int, 0)
 				for _, v := range hs.Spec.Applications {
 					names[v.Spec.Name] = true
@@ -129,6 +130,7 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 					} else {
 						images[v.Spec.Name] = 1
 					}
+					whiteLists[v.Spec.Name] = v.Spec.ServiceWhiteList
 				}
 				for _, v := range lastCache.Spec.Applications {
 					if _, ok := names[v.Spec.Name]; !ok {
@@ -153,6 +155,14 @@ func (c *controller) Sync(obj interface{}, clientObj interface{}, ks k8scorev1.K
 						if err := DeleteService(ks, hs.Namespace, v.Spec.Name); err != nil {
 							klog.V(2).Info(err)
 							return err
+						}
+					}
+					if whiteList, ok := whiteLists[v.Spec.Name]; ok {
+						if whiteList != v.Spec.ServiceWhiteList {
+							if err := DeleteService(ks, hs.Namespace, v.Spec.Name); err != nil {
+								klog.V(2).Info(err)
+								return err
+							}
 						}
 					}
 				}
