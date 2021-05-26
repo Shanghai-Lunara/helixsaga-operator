@@ -31,10 +31,13 @@ func TestInit(t *testing.T) {
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc",
 					"service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners": "false",
 				},
-				WhiteList: map[string]string{
+				WhiteListOn: map[string]string{
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status": "on",
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":     "${YOUR_ACL_ID}",
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":   "white",
+				},
+				WhiteListOff: map[string]string{
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status": "off",
 				},
 			},
 			expectedResult: true,
@@ -49,10 +52,13 @@ func TestInit(t *testing.T) {
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc",
 					"service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners": "false",
 				},
-				WhiteList: map[string]string{
+				WhiteListOn: map[string]string{
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-statusx": "on",
-					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":     "${YOUR_ACL_ID}",
-					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":   "white1",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":      "${YOUR_ACL_ID}",
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":    "white1",
+				},
+				WhiteListOff: map[string]string{
+					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status": "off",
 				},
 			},
 			expectedResult: false,
@@ -67,7 +73,7 @@ func TestInit(t *testing.T) {
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-id":                  "abc111",
 					"service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners": "false",
 				},
-				WhiteList: map[string]string{
+				WhiteListOn: map[string]string{
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-status": "on",
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-id":     "${YOUR_ACL_ID}",
 					"service.beta.kubernetes.io/alibaba-cloud-loadbalancer-acl-type":   "white",
@@ -98,4 +104,23 @@ func TestInit(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPointer(t *testing.T) {
+	path, err := os.Getwd()
+	if err != nil {
+		t.Errorf("os.Getwd err:%v\n", err)
+	}
+	_ = Init(fmt.Sprintf("%s/svc.yaml", path))
+
+	fmt.Printf("init:%#v\n", annotations)
+	b1 := make(map[string]string, 0)
+	b1 = Get().Annotations
+	fmt.Printf("b1-1: %#v\n", b1)
+	for k, v := range Get().WhiteListOn {
+		b1[k] = v
+	}
+	fmt.Printf("b1-2: %#v\n", b1)
+	fmt.Printf("Annotations: %#v\n", Get().Annotations)
+	fmt.Printf("now:%#v\n", annotations)
 }

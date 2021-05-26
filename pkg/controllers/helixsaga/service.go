@@ -14,16 +14,6 @@ func NewService(hs *helixSagav1.HelixSaga, spec *helixSagav1.HelixSagaAppSpec) *
 		k8scorev1.LabelController: hs.Name,
 		k8scorev1.LabelName:       spec.Name,
 	}
-	annotations := make(map[string]string, 0)
-	switch spec.ServiceType {
-	case corev1.ServiceTypeLoadBalancer:
-		annotations = serviceloadbalancer.Get().Annotations
-		if spec.ServiceWhiteList == true {
-			for k, v := range serviceloadbalancer.Get().WhiteList {
-				annotations[k] = v
-			}
-		}
-	}
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      k8scorev1.GetServiceName(spec.Name),
@@ -32,7 +22,7 @@ func NewService(hs *helixSagav1.HelixSaga, spec *helixSagav1.HelixSagaAppSpec) *
 				*metav1.NewControllerRef(hs, helixSagav1.SchemeGroupVersion.WithKind(OperatorKindName)),
 			},
 			Labels:      labels,
-			Annotations: annotations,
+			Annotations: serviceloadbalancer.Annotation(spec.ServiceType, spec.ServiceWhiteList),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     k8scorev1.GetServiceType(spec.ServiceType),
