@@ -67,28 +67,33 @@ func NewDeployment(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpec
 			},
 		},
 	}
+	// configmap
+	dp.Spec.Template.Spec.Volumes = []coreV1.Volume{
+		hs.Spec.ConfigMap.Volume,
+	}
+	dp.Spec.Template.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
+		hs.Spec.ConfigMap.VolumeMount,
+	}
 	if spec.VolumePath != "" {
 		t := coreV1.HostPathDirectoryOrCreate
 		hostPath := &coreV1.HostPathVolumeSource{
 			Type: &t,
 			Path: fmt.Sprintf("%s/%s/helixsaga/%s", spec.VolumePath, hs.Namespace, spec.Name),
 		}
-		dp.Spec.Template.Spec.Volumes = []coreV1.Volume{
-			hs.Spec.ConfigMap.Volume,
-			{
+		dp.Spec.Template.Spec.Volumes = append(dp.Spec.Template.Spec.Volumes,
+			coreV1.Volume{
 				Name: "task-pv-storage",
 				VolumeSource: coreV1.VolumeSource{
 					HostPath: hostPath,
 				},
 			},
-		}
-		dp.Spec.Template.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
-			hs.Spec.ConfigMap.VolumeMount,
-			{
+		)
+		dp.Spec.Template.Spec.Containers[0].VolumeMounts = append(dp.Spec.Template.Spec.Containers[0].VolumeMounts,
+			coreV1.VolumeMount{
 				MountPath: "/data",
 				Name:      "task-pv-storage",
 			},
-		}
+		)
 	}
 	return dp
 }
