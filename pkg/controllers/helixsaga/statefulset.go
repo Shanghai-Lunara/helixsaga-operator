@@ -27,12 +27,7 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpe
 		k8sCoreV1.LabelController: hs.Name,
 		k8sCoreV1.LabelName:       spec.Name,
 	}
-	t := coreV1.HostPathDirectoryOrCreate
-	hostPath := &coreV1.HostPathVolumeSource{
-		Type: &t,
-		Path: fmt.Sprintf("%s/%s/helixsaga/%s", spec.VolumePath, hs.Namespace, spec.Name),
-	}
-	return &appsV1.StatefulSet{
+	sts := &appsV1.StatefulSet{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      k8sCoreV1.GetStatefulSetName(spec.Name),
 			Namespace: hs.Namespace,
@@ -51,28 +46,12 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpe
 					Labels: labels,
 				},
 				Spec: coreV1.PodSpec{
-					Volumes: []coreV1.Volume{
-						hs.Spec.ConfigMap.Volume,
-						{
-							Name: "task-pv-storage",
-							VolumeSource: coreV1.VolumeSource{
-								HostPath: hostPath,
-							},
-						},
-					},
 					Containers: []coreV1.Container{
 						{
-							Name:  k8sCoreV1.GetContainerName(spec.Name),
-							Image: spec.Image,
-							Ports: spec.ContainerPorts,
-							Env:   ExposePodInformationByEnvs(spec.Env),
-							VolumeMounts: []coreV1.VolumeMount{
-								hs.Spec.ConfigMap.VolumeMount,
-								{
-									MountPath: "/data",
-									Name:      "task-pv-storage",
-								},
-							},
+							Name:            k8sCoreV1.GetContainerName(spec.Name),
+							Image:           spec.Image,
+							Ports:           spec.ContainerPorts,
+							Env:             ExposePodInformationByEnvs(spec.Env),
 							Command:         spec.Command,
 							Args:            spec.Args,
 							Resources:       spec.Resources,
@@ -88,4 +67,28 @@ func NewStatefulSet(hs *helixSagaV1.HelixSaga, spec *helixSagaV1.HelixSagaAppSpe
 			},
 		},
 	}
+	if spec.VolumePath != "" {
+		t := coreV1.HostPathDirectoryOrCreate
+		hostPath := &coreV1.HostPathVolumeSource{
+			Type: &t,
+			Path: fmt.Sprintf("%s/%s/helixsaga/%s", spec.VolumePath, hs.Namespace, spec.Name),
+		}
+		sts.Spec.Template.Spec.Volumes = []coreV1.Volume{
+			hs.Spec.ConfigMap.Volume,
+			{
+				Name: "task-pv-storage",
+				VolumeSource: coreV1.VolumeSource{
+					HostPath: hostPath,
+				},
+			},
+		}
+		sts.Spec.Template.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
+			hs.Spec.ConfigMap.VolumeMount,
+			{
+				MountPath: "/data",
+				Name:      "task-pv-storage",
+			},
+		}
+	}
+	return sts
 }
